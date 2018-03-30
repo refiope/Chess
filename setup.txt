@@ -1,0 +1,47 @@
+Chess:
+
+**needs to be able to save the board and pieces turn to save/load**
+
+**needs to know whether every move leads to check**
+  -you can't move a knight that's protecting a king from check/check_mate
+
+**end of the game: check mate**
+  -in check already (check has to be a prerequisite for check_mate)
+  -check king's next movements
+  -if they are covered by enemy's potential next moves, it's check_mate => game_over
+  -going to ignore stalemate for now
+
+each piece will be an object:
+
+  -Important attribute of each piece is:
+    - color: White/Black
+    - character_code: uni-code
+    - **available next moves** unique for each piece
+      -including removal of opponent piece
+    - special moves: 1. pawn at the end of the board
+                     2. pawn being able to move two to the front from initial position
+                     2. rook <=> king switch
+
+board will look like this:
+8
+7
+6
+5
+4
+3
+2
+1
+  a  b  c  d  e  f  g  h
+
+  -will need good conversion of inputs
+
+each empty tile has to be an object?
+  -Because it needs to know if going to that tile leads to check_mate for each king
+each piece takes inheritance from white/black class?
+
+
+game_loop:
+  1. display board
+  2. player 1(2) input
+    -check if king is checked
+      -check check_mate
