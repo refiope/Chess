@@ -8,6 +8,27 @@ class GameBoard
     # Need to set up all the pieces here
   end
 
+  def initial_setup
+
+  end
+
+  def setup_pawn
+    @board[1].each_with_index do |column, index|
+      column = Pawn.new('B', [1,index])
+    end
+    @board[6].each_with_index do |column, index|
+      column = Pawn.new('W', [6,index])
+    end
+  end
+
+  def setup_rook
+    @board[0].each_with_index do |column, index|
+      column = Rook.new('B',[0,index]) if index == 0 || 7
+    end
+    @board[7].each_with_index do |column, index|
+      column = Rook.new('B',[7,index]) if index == 0 || 7
+    end
+  end
 end
 
 class Game
@@ -30,10 +51,10 @@ class ChessPiece
   def mark piece
     chess_code = "\u265"
     pieces = ['king','queen','rook','bishop','knight','pawn']
-    order = ['A','B','C','D','E','F','4','5','6','7','8','9']
+    last_code = ['A','B','C','D','E','F','4','5','6','7','8','9']
     index = pieces.find_index(piece)
-    return chess_code + order[index] if @color == 'W'
-    return chess_code + order[index+6] if @color == 'B'
+    return chess_code + last_code[index] if @color == 'W'
+    return chess_code + last_code[index+6] if @color == 'B'
   end
 end
 
