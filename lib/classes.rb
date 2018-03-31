@@ -11,8 +11,9 @@ end
 
 class Game
 
-  def initialize
-    @board = GameBoard.new
+  def initialize (board=GameBoard.new, turn='W')
+    @board = board
+    @turn = turn
   end
 
 end
