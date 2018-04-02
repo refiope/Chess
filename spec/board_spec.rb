@@ -1,6 +1,6 @@
 require 'classes'
 
-describe 'Chess game' do
+describe 'Chess board' do
 
   describe GameBoard do
   end
