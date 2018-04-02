@@ -1,4 +1,5 @@
 
+#Access board
 class GameBoard
   attr_accessor :board
 
@@ -6,15 +7,11 @@ class GameBoard
     @board = []
     8.times { @board.push(Array.new(8,nil)) }
     # Need to set up all the pieces here
+    initial_setup
   end
 
   def display
-    column_order = ['a','b','c','d','e','f','g','h']
-    print "  "
-    column_order.each do |letter|
-      print letter+"  "
-    end
-    puts ""
+    display_column_order
     @board.each_index do |row|
       print (8-row).abs
       print "|"
@@ -26,10 +23,16 @@ class GameBoard
       print (8-row).abs
       puts "\n--------------------------"
     end
+    display_column_order
+  end
+
+  def display_column_order
+    column_order = ['a','b','c','d','e','f','g','h']
     print "  "
     column_order.each do |letter|
       print letter+"  "
     end
+    puts ""
   end
 
   def initial_setup
@@ -95,13 +98,14 @@ class Game
 
 end
 
+#Access color, position, symbol
 class ChessPiece
-  attr_accessor :color, :pos
+  attr_accessor :color, :position
   attr_reader :symbol
 
-  def initialize (color, pos, piece)
+  def initialize (color, position, piece)
     @color = color
-    @position = pos
+    @position = position
     @symbol = mark(piece)
   end
 
@@ -124,7 +128,6 @@ class Pawn < ChessPiece
 end
 
 class Knight < ChessPiece
-  attr_reader :symbol
 
   def next_positions
   end
