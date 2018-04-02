@@ -101,11 +101,12 @@ end
 #Access color, position, symbol
 class ChessPiece
   attr_accessor :color, :position
-  attr_reader :symbol
+  attr_reader :symbol, :piece
 
   def initialize (color, position, piece)
     @color = color
     @position = position
+    @piece = piece
     @symbol = mark(piece)
   end
 
@@ -121,42 +122,41 @@ class ChessPiece
   end
 end
 
+#En Passant, end of the board change
 class Pawn < ChessPiece
 
-  def next_positions
+  def next_positions board
   end
 end
 
 class Knight < ChessPiece
 
-  def next_positions
+  def next_positions board
   end
 end
 
 class Bishop < ChessPiece
-  attr_reader :symbol
 
-  def next_positions
+  def next_positions board
   end
 end
 
+#King <=> Rook switch
 class Rook < ChessPiece
-  attr_reader :symbol
 
-  def next_positions
+  def next_positions board
   end
 end
 
 class Queen < ChessPiece
-  attr_reader :symbol
 
-  def next_positions
+  def next_positions board
   end
 end
 
+#King <=> Rook switch
 class King < ChessPiece
-  attr_reader :symbol
 
-  def next_positions
+  def next_positions board
   end
 end
