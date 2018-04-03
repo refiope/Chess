@@ -46,10 +46,10 @@ class GameBoard
 
   def setup_pawn
     @board[1].each_index do |index|
-      @board[1][index] = Pawn.new('B', [1,index],'pawn')
+      @board[1][index] = Pawn.new('B', [1,index],'pawn', false)
     end
     @board[6].each_index do |index|
-      @board[6][index] = Pawn.new('W', [6,index],'pawn')
+      @board[6][index] = Pawn.new('W', [6,index],'pawn', false)
     end
   end
 
@@ -93,17 +93,70 @@ end
 #ex. pawns with the jump, en passant, and piece change
 #ex. rooks and kings with switch
 class Game
+  attr_reader :board
 
   def initialize (board=GameBoard.new, turn='W')
     @board = board
     @turn = turn
+    @selected = nil
+  end
+
+  #a...h, 1...8
+  def get_input
+    input = gets.chomp
+  end
+
+  #input = [n,n]
+  def select input
+    if @board.board[input[0]][input[1]].color == @turn
+      @selected = @board.board[input[0]][input[1]]
+    else
+      puts "Choose the right piece"
+    end
+  end
+
+  #input = [n,n]
+  def move_piece input
+    #this spends the turn: maybe reset all pawn's en_passant here?
+    @selected.get_next(@board.board)
+    row, column = @selected.position[0], @selected.position[1]
+
+    valid_move = check_regular_move(input)
+    valid_move = check_special_move(input) if valid_move.nil?
+
+    @board.board[valid_move[0]][valid_move[1]] = @selected
+    @board.board[valid_move[0]][valid_move[1]].position = valid_move
+    @board.board[row][column] = nil
+  end
+
+  def check_regular_move (input)
+    @selected.next_moves[:regular].each do |move|
+      return input if input == move
+    end
+    return nil
+  end
+
+  def check_special_move (input)
+    if @selected.next_moves.key(input).nil?
+      puts "You can't move there"
+      #start getting input again
+    else
+      return special_move(@selected.next_moves.key(input))
+    end
+  end
+
+  #jump, en_passant, switch, pawn-end-game
+  #hint for en_passant, every turn, the current player's pawns become
+  #ineligible for en_passant
+  def special_move move_type
+    return move_type
   end
 
 end
 
 #Access color, position, symbol, next_moves
 class ChessPiece
-  attr_accessor :color, :position
+  attr_accessor :color, :position, :next_moves
   attr_reader :symbol, :piece, :opposite_color
 
   def initialize (color, position, piece)
@@ -111,7 +164,7 @@ class ChessPiece
     @opposite_color = opposite(color)
     @position = position
     @piece = piece
-    @next_moves = []
+    @next_moves = Hash.new([])
     @symbol = mark(piece)
   end
 
@@ -136,13 +189,40 @@ end
 class Pawn < ChessPiece
   attr_accessor :jump_used
 
-  @jump_used = false
+  def initialize (color, position, piece, jump_used)
+    super(color, position, piece)
+    @jump_used = jump_used
+  end
 
-  def next_position
-    row, column = @position[1], @position[2]
+  def get_next board
+    @next_moves = Hash.new([])
+    @next_moves[:regular] = []
+
+    row, column = @position[0], @position[1]
 
     @color == 'W' ? move = -1 : move = 1
+
+    check_attack(row, column, move, board, -1)
+    check_attack(row, column, move, board, 1)
+    check_moves(row, column, move, board)
   end
+
+  def check_attack (row, column, move, board, direction)
+    if (!board[row+move][column+direction].nil? &&
+        board[row+move][column+direction].color == @opposite_color)
+          @next_moves[:regular].push([row+move, column+direction])
+    end
+  end
+
+  def check_moves (row, column, move, board)
+    if board[row+move][column].nil?
+      @next_moves[:regular].push([row+move, column])
+      if board[row + 2*move][column].nil? && @jump_used == false
+        @next_moves[:jump] = [row + 2*move, column]
+      end
+    end
+  end
+
 end
 
 class Knight < ChessPiece
