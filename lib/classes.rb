@@ -89,6 +89,9 @@ class GameBoard
 
 end
 
+#Game needs to control special cases:
+#ex. pawns with the jump, en passant, and piece change
+#ex. rooks and kings with switch
 class Game
 
   def initialize (board=GameBoard.new, turn='W')
@@ -98,15 +101,17 @@ class Game
 
 end
 
-#Access color, position, symbol
+#Access color, position, symbol, next_moves
 class ChessPiece
   attr_accessor :color, :position
-  attr_reader :symbol, :piece
+  attr_reader :symbol, :piece, :opposite_color
 
   def initialize (color, position, piece)
     @color = color
+    @opposite_color = opposite(color)
     @position = position
     @piece = piece
+    @next_moves = []
     @symbol = mark(piece)
   end
 
@@ -120,43 +125,44 @@ class ChessPiece
     return uni_codes[index] if @color == 'W'
     return uni_codes[index+6] if @color == 'B'
   end
+
+  def opposite color
+    return 'B' if @color == 'W'
+    return 'W' if @color == 'B'
+  end
 end
 
 #En Passant, end of the board change
 class Pawn < ChessPiece
+  attr_accessor :jump_used
 
-  def next_positions board
+  @jump_used = false
+
+  def next_position
+    row, column = @position[1], @position[2]
+
+    @color == 'W' ? move = -1 : move = 1
   end
 end
 
 class Knight < ChessPiece
 
-  def next_positions board
-  end
 end
 
 class Bishop < ChessPiece
 
-  def next_positions board
-  end
 end
 
 #King <=> Rook switch
 class Rook < ChessPiece
 
-  def next_positions board
-  end
 end
 
 class Queen < ChessPiece
 
-  def next_positions board
-  end
 end
 
 #King <=> Rook switch
 class King < ChessPiece
 
-  def next_positions board
-  end
 end
