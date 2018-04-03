@@ -6,7 +6,6 @@ class GameBoard
   def initialize
     @board = []
     8.times { @board.push(Array.new(8,nil)) }
-    # Need to set up all the pieces here
     initial_setup
   end
 
@@ -103,7 +102,16 @@ class Game
 
   #a...h, 1...8
   def get_input
+    order = ['a','b','c','d','e','f','g','h']
     input = gets.chomp
+    if input[0].between?('a','h') && input[1].between?('1','8')
+      row = (input[1].to_i - 8).abs
+      column = order.find_index(input[0])
+      return [row, column]
+    else
+      puts "wrong input"
+      get_input
+    end
   end
 
   #input = [n,n]
