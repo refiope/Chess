@@ -92,7 +92,8 @@ end
 #ex. pawns with the jump, en passant, and piece change
 #ex. rooks and kings with switch
 class Game
-  #reading selected and board for test purposes
+  #reading selected, board, turn for test purposes
+  attr_accessor :turn
   attr_reader :board, :selected
 
   def initialize (board=GameBoard.new, turn='W')
@@ -174,7 +175,7 @@ class Game
       side = 1 if @selected.color == 'W'
       side = -1 if @selected.color == 'B'
 
-      @board.board[input[0]][input[1]] = nil
+      @board.board[input[0]+side][input[1]] = nil
       return input
     when :end_pawn
       change_piece
@@ -242,7 +243,7 @@ class Pawn < ChessPiece
   def initialize (color, position, piece, jump_used, be_passant)
     super(color, position, piece)
     @jump_used = jump_used
-    @can_passant = be_passant
+    @be_passant = be_passant
   end
 
   def get_next board
@@ -259,7 +260,6 @@ class Pawn < ChessPiece
       check_en_passant(row, column, move, board, d)
     end
     check_moves(row, column, move, board)
-    check_end(row, column, move, board)
   end
 
   def check_attack (row, column, move, board, direction)
@@ -284,10 +284,10 @@ class Pawn < ChessPiece
 
   def check_en_passant (row, column, move, board, direction)
     if (!board[row][column+direction].nil? &&
-        board[row+move][column_direction].nil? &&
+        board[row+move][column+direction].nil? &&
         board[row][column+direction].color == @opposite_color &&
         board[row][column+direction].piece == 'pawn' &&
-        board[row][column+direction].be_passanted == true)
+        board[row][column+direction].be_passant == true)
           @next_moves[:en_passant] = [row+move, column+direction]
     end
   end
