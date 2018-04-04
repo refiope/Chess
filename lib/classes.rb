@@ -45,10 +45,10 @@ class GameBoard
 
   def setup_pawn
     @board[1].each_index do |index|
-      @board[1][index] = Pawn.new('B', [1,index],'pawn', false)
+      @board[1][index] = Pawn.new('B', [1,index],'pawn', false, false)
     end
     @board[6].each_index do |index|
-      @board[6][index] = Pawn.new('W', [6,index],'pawn', false)
+      @board[6][index] = Pawn.new('W', [6,index],'pawn', false, false)
     end
   end
 
@@ -127,6 +127,8 @@ class Game
   end
 
   #input = [n,n]
+  #this is also where you check if moving piece checks the king
+  #the only case where that happens is rook, bishop, or queen
   def move input
     #this spends the turn: maybe reset all pawn's en_passant here?
     @selected.get_next(@board.board)
@@ -155,15 +157,49 @@ class Game
       return nil
       #start getting input again
     else
-      return special_move(@selected.next_moves.key(input))
+      return special_move(@selected.next_moves.key(input), input)
     end
   end
 
   #jump, en_passant, switch, pawn-end-game
   #hint for en_passant, every turn, the current player's pawns become
   #ineligible for en_passant
-  def special_move move_type
-    return move_type
+  def special_move (move_type, input)
+    case move_type
+    when :jump
+      @selected.jump_used = true
+      @selected.be_passant = true
+      return input
+    when :en_passant
+      side = 1 if @selected.color == 'W'
+      side = -1 if @selected.color == 'B'
+
+      @board.board[input[0]][input[1]] = nil
+      return input
+    when :end_pawn
+      change_piece
+      return input
+    when :switch
+    else
+    end
+  end
+
+  def change_piece
+    color = @selected.color
+    piece = gets.chomp
+    case piece
+      when 'queen'
+        @selected = Queen.new(color,[],'queen')
+      when 'knight'
+        @selected = Knight.new(color,[],'knight')
+      when 'rook'
+        @selected = Rook.new(color,[],'rook')
+      when 'bishop'
+        @selected = Bishop.new(color,[],'bishop')
+      else
+        puts "Choose queen, knight, rook, or bishop"
+        change_piece
+      end
   end
 
 end
@@ -201,11 +237,12 @@ end
 
 #En Passant, end of the board change
 class Pawn < ChessPiece
-  attr_accessor :jump_used
+  attr_accessor :jump_used, :be_passant
 
-  def initialize (color, position, piece, jump_used)
+  def initialize (color, position, piece, jump_used, be_passant)
     super(color, position, piece)
     @jump_used = jump_used
+    @can_passant = be_passant
   end
 
   def get_next board
@@ -216,9 +253,13 @@ class Pawn < ChessPiece
 
     @color == 'W' ? move = -1 : move = 1
 
-    check_attack(row, column, move, board, -1)
-    check_attack(row, column, move, board, 1)
+    direction = [-1,1]
+    direction.each do |d|
+      check_attack(row, column, move, board, d)
+      check_en_passant(row, column, move, board, d)
+    end
     check_moves(row, column, move, board)
+    check_end(row, column, move, board)
   end
 
   def check_attack (row, column, move, board, direction)
@@ -230,15 +271,32 @@ class Pawn < ChessPiece
 
   def check_moves (row, column, move, board)
     if board[row+move][column].nil?
-      @next_moves[:regular].push([row+move, column])
+      if row + move == 7 ||row + move == 0
+        @next_moves[:end_pawn] = [row+move, column]
+      else
+        @next_moves[:regular].push([row+move, column])
+      end
       if board[row + 2*move][column].nil? && @jump_used == false
         @next_moves[:jump] = [row + 2*move, column]
       end
     end
   end
 
+  def check_en_passant (row, column, move, board, direction)
+    if (!board[row][column+direction].nil? &&
+        board[row+move][column_direction].nil? &&
+        board[row][column+direction].color == @opposite_color &&
+        board[row][column+direction].piece == 'pawn' &&
+        board[row][column+direction].be_passanted == true)
+          @next_moves[:en_passant] = [row+move, column+direction]
+    end
+  end
+
 end
 
+#each piece needs #get_next method where it pushes next possible moves to
+#next_moves, which is initiated with class ChessPiece
+#each piece may have to check if it's checking every move
 class Knight < ChessPiece
 
 end
