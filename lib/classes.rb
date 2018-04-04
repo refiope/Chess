@@ -92,7 +92,8 @@ end
 #ex. pawns with the jump, en passant, and piece change
 #ex. rooks and kings with switch
 class Game
-  attr_reader :board
+  #reading selected and board for test purposes
+  attr_reader :board, :selected
 
   def initialize (board=GameBoard.new, turn='W')
     @board = board
@@ -116,15 +117,17 @@ class Game
 
   #input = [n,n]
   def select input
-    if @board.board[input[0]][input[1]].color == @turn
-      @selected = @board.board[input[0]][input[1]]
-    else
+
+    if @board.board[input[0]][input[1]].nil?
       puts "Choose the right piece"
+    elsif @board.board[input[0]][input[1]].color == @turn
+      @selected = @board.board[input[0]][input[1]]
     end
+
   end
 
   #input = [n,n]
-  def move_piece input
+  def move input
     #this spends the turn: maybe reset all pawn's en_passant here?
     @selected.get_next(@board.board)
     row, column = @selected.position[0], @selected.position[1]
@@ -132,9 +135,11 @@ class Game
     valid_move = check_regular_move(input)
     valid_move = check_special_move(input) if valid_move.nil?
 
-    @board.board[valid_move[0]][valid_move[1]] = @selected
-    @board.board[valid_move[0]][valid_move[1]].position = valid_move
-    @board.board[row][column] = nil
+    if !valid_move.nil?
+      @board.board[valid_move[0]][valid_move[1]] = @selected
+      @board.board[valid_move[0]][valid_move[1]].position = valid_move
+      @board.board[row][column] = nil
+    end
   end
 
   def check_regular_move (input)
@@ -147,6 +152,7 @@ class Game
   def check_special_move (input)
     if @selected.next_moves.key(input).nil?
       puts "You can't move there"
+      return nil
       #start getting input again
     else
       return special_move(@selected.next_moves.key(input))
