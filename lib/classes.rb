@@ -92,9 +92,9 @@ end
 #ex. pawns with the jump, en passant, and piece change
 #ex. rooks and kings with switch
 class Game
-  #reading selected, board, turn for test purposes
-  attr_accessor :turn
-  attr_reader :board, :selected
+  #accessing selected, board, turn for test purposes
+  attr_accessor :turn, :board
+  attr_reader :selected
 
   def initialize (board=GameBoard.new, turn='W')
     @board = board

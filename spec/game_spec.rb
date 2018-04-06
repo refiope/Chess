@@ -7,6 +7,13 @@ describe 'Chess game' do
     #keep in mind that new game starts with white's turn
     before(:each) do
       @game = Game.new
+
+      @empty_board = GameBoard.new
+      @empty_array = []
+      8.times {@empty_array.push(Array.new(8,nil))}
+      @empty_board.board = @empty_array
+
+      @empty_game = Game.new(@empty_board)
     end
 
     context '#select' do
@@ -91,6 +98,17 @@ describe 'Chess game' do
           @game.board.display
           expect(@game.board.board[3][3]).to eql(nil)
           expect(@game.board.board[2][3].piece).to eql('pawn')
+        end
+
+        it 'changes white pawn at the end of the board' do
+          @empty_game.board.board[1][4] = Pawn.new('W', [1,4], 'pawn', false, false)
+          @empty_game.select([1,4])
+          @empty_game.move([0,4])
+          #manually choose queen
+          @empty_game.board.display
+          expect(@empty_game.board.board[0][4].piece).to eql('queen')
+          expect(@empty_game.board.board[0][4].color).to eql('W')
+          expect(@empty_game.board.board[0][4].position).to eql([0,4])
         end
 
         it 'does not allow invalid moves for pawn' do
