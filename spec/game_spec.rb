@@ -3,7 +3,6 @@ require 'classes'
 describe 'Chess game' do
 
   describe Game do
-    let(:queen) {'queen\n'}
     #keep in mind that new game starts with white's turn
     before(:each) do
       @game = Game.new
@@ -191,6 +190,54 @@ describe 'Chess game' do
           @empty_game.board.board[1][1] = Bishop.new('W',[3,3], 'bishop')
           @empty_game.select([3,3])
           expect(@empty_game.move([1,1])).to eql(nil)
+        end
+      end
+
+      context 'movements with rook' do
+
+        it 'makes the right move' do
+          @empty_game.board.board[3][3] = Rook.new('W',[3,3], 'rook')
+          @empty_game.select([3,3])
+          @empty_game.move([0,3])
+          expect(@empty_game.board.board[0][3].piece).to eql('rook')
+        end
+
+        it 'does not make invalid move' do
+          @empty_game.turn = 'B'
+          @empty_game.board.board[3][3] = Rook.new('B',[3,3],'rook')
+          @empty_game.select([3,3])
+          expect(@empty_game.move([2,2])).to eql(nil)
+        end
+
+        it 'does not go past ally piece' do
+          @empty_game.board.board[3][3] = Rook.new('W',[3,3],'rook')
+          @empty_game.board.board[3][1] = Rook.new('W',[3,1],'rook')
+          @empty_game.select([3,3])
+          expect(@empty_game.move([3,0])).to eql(nil)
+        end
+
+        it 'does not go past enemy piece' do
+          @empty_game.turn = 'B'
+          @empty_game.board.board[3][3] = Rook.new('B',[3,3], 'rook')
+          @empty_game.board.board[3][1] = Rook.new('W',[3,3], 'rook')
+          @empty_game.select([3,3])
+          expect(@empty_game.move([3,0])).to eql(nil)
+        end
+
+        it 'does take enemy piece' do
+          @empty_game.turn = 'B'
+          @empty_game.board.board[3][3] = Rook.new('B',[3,3], 'rook')
+          @empty_game.board.board[3][1] = Rook.new('W',[3,3], 'rook')
+          @empty_game.select([3,3])
+          @empty_game.move([3,1])
+          expect(@empty_game.board.board[3][1].color).to eql('B')
+        end
+
+        it 'does not take ally piece' do
+          @empty_game.board.board[3][3] = Bishop.new('W',[3,3], 'rook')
+          @empty_game.board.board[3][1] = Bishop.new('W',[3,3], 'rook')
+          @empty_game.select([3,3])
+          expect(@empty_game.move([3,1])).to eql(nil)
         end
       end
 
