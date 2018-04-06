@@ -401,6 +401,39 @@ end
 
 class Queen < ChessPiece
 
+  def get_next board
+    @next_moves = Hash.new([])
+    @next_moves[:regular] = []
+
+    row, column = @position[0], @position[1]
+
+    queen_move = [[1,1],[-1,1],[1,-1],[-1,-1],
+                  [1,0],[0,1],[-1,0],[0,-1]]
+
+    queen_move.each do |move|
+      next_row, next_column = move[0], move[1]
+
+      while (row+next_row).between?(0,7) &&
+            (column+next_column).between?(0,7) do
+
+        if board[row+next_row][column+next_column].nil?
+          @next_moves[:regular].push([row+next_row,column+next_column])
+        else
+          if board[row+next_row][column+next_column].color == @opposite_color
+            @next_moves[:regular].push([row+next_row,column+next_column])
+            break
+          else
+            break
+          end
+        end
+
+        next_row += 1 if next_row > 0
+        next_row -= 1 if next_row < 0
+        next_column += 1 if next_column > 0
+        next_column -= 1 if next_column < 0
+      end
+    end
+  end
 end
 
 #King <=> Rook switch
