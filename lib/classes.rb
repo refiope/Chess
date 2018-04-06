@@ -361,7 +361,6 @@ class Bishop < ChessPiece
 
 end
 
-#King <=> Rook switch
 class Rook < ChessPiece
 
     def get_next board
@@ -396,9 +395,6 @@ class Rook < ChessPiece
         end
       end
 
-    end
-
-    def check_switch
     end
 
 end
