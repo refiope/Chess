@@ -171,15 +171,17 @@ class Game
       @selected.jump_used = true
       @selected.be_passant = true
       return input
+
     when :en_passant
       side = 1 if @selected.color == 'W'
       side = -1 if @selected.color == 'B'
-
       @board.board[input[0]+side][input[1]] = nil
       return input
+
     when :end_pawn
       change_piece
       return input
+      
     when :switch
     else
     end
@@ -298,6 +300,23 @@ end
 #next_moves, which is initiated with class ChessPiece
 #each piece may have to check if it's checking every move
 class Knight < ChessPiece
+
+  def get_next board
+    @next_moves = Hash.new([])
+    @next_moves[:regular] = []
+
+    row, column = @position[0], @position[1]
+
+    knight_moves = [[1,2],[-1,2],[1,-2],[-1,-2],
+                    [2,1],[-2,1],[2,-1],[-2,-1]]
+
+    knight_moves.each do |move|
+      if (row + move[0]).between?(0,7) &&
+         (column + move[1]).between?(0,7)
+           @next_moves[:regular].push([row+move[0],column+move[1]])
+      end
+    end
+  end
 
 end
 

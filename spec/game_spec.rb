@@ -3,10 +3,11 @@ require 'classes'
 describe 'Chess game' do
 
   describe Game do
-
+    let(:queen) {'queen\n'}
     #keep in mind that new game starts with white's turn
     before(:each) do
       @game = Game.new
+      @input = StringIO.new('queen')
 
       @empty_board = GameBoard.new
       @empty_array = []
@@ -84,28 +85,22 @@ describe 'Chess game' do
           expect(@game.move([2,4])).to eql(nil)
         end
 
-        it 'can en_passant: WARNING-Will not work when turn changes automatically' do
-          @game.select([6,4])
-          @game.move([4,4])
-          @game.select([4,4])
-          @game.move([3,4])
-          @game.turn = 'B'
-          @game.select([1,3])
-          @game.move([3,3])
-          @game.turn = 'W'
-          @game.select([3,4])
-          @game.move([2,3])
-          @game.board.display
-          expect(@game.board.board[3][3]).to eql(nil)
-          expect(@game.board.board[2][3].piece).to eql('pawn')
+        it 'white pawn can en_passant' do
+          @empty_game.board.board[4][4] = Pawn.new('W',[4,4],'pawn',false,false)
+          @empty_game.board.board[4][3] = Pawn.new('B',[4,3],'pawn',true,true)
+          @empty_game.select([4,4])
+          @empty_game.move([3,3])
+          expect(@empty_game.board.board[4][3]).to eql(nil)
+          expect(@empty_game.board.board[3][3].piece).to eql('pawn')
         end
 
         it 'changes white pawn at the end of the board' do
+          allow(@empty_game).to receive(:gets).and_return('queen')
+
           @empty_game.board.board[1][4] = Pawn.new('W', [1,4], 'pawn', false, false)
           @empty_game.select([1,4])
           @empty_game.move([0,4])
-          #manually choose queen
-          @empty_game.board.display
+
           expect(@empty_game.board.board[0][4].piece).to eql('queen')
           expect(@empty_game.board.board[0][4].color).to eql('W')
           expect(@empty_game.board.board[0][4].position).to eql([0,4])
@@ -116,6 +111,34 @@ describe 'Chess game' do
           expect(@game.move([3,6])).to eql(nil)
         end
 
+      end
+
+      context 'movements with knight' do
+
+        it 'moves white to right positions' do
+          @empty_game.board.board[3][3] = Knight.new('W',[3,3],'knight')
+          @empty_game.select([3,3])
+          @empty_game.move([4,5])
+          expect(@empty_game.board.board[4][5].piece).to eql('knight')
+          expect(@empty_game.board.board[4][5].color).to eql('W')
+          expect(@empty_game.board.board[4][5].position).to eql([4,5])
+          expect(@empty_game.board.board[3][3]).to eql(nil)
+        end
+
+        it 'moves black to right positions' do
+          @empty_game.turn = 'B'
+          @empty_game.board.board[3][3] = Knight.new('B',[3,3],'knight')
+          @empty_game.select([3,3])
+          @empty_game.move([4,5])
+          expect(@empty_game.board.board[4][5].piece).to eql('knight')
+          expect(@empty_game.board.board[4][5].color).to eql('B')
+        end
+
+        it 'does not make invalid moves' do
+          @empty_game.board.board[3][3] = Knight.new('W',[3,3],'knight')
+          @empty_game.select([3,3])
+          expect(@empty_game.move([5,5])).to eql(nil)
+        end
       end
 
     end
