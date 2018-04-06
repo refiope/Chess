@@ -181,7 +181,7 @@ class Game
     when :end_pawn
       change_piece
       return input
-      
+
     when :switch
     else
     end
@@ -322,6 +322,14 @@ end
 
 class Bishop < ChessPiece
 
+  def get_next board
+    @next_moves = Hash.new([])
+    @next_moves[:regular] = []
+
+    row, column = @position[0], @position[1]
+
+    
+  end
 end
 
 #King <=> Rook switch
