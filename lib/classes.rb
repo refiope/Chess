@@ -312,8 +312,14 @@ class Knight < ChessPiece
 
     knight_moves.each do |move|
       if (row + move[0]).between?(0,7) &&
-         (column + move[1]).between?(0,7)
+         (column + move[1]).between?(0,7) &&
+         if !board[row+move[0]][column+move[1]].nil?
+           if board[row+move[0]][column+move[1]].color == @opposite_color
+             @next_moves[:regular].push([row+move[0],column+move[1]])
+           end
+         else
            @next_moves[:regular].push([row+move[0],column+move[1]])
+         end
       end
     end
   end
@@ -328,8 +334,31 @@ class Bishop < ChessPiece
 
     row, column = @position[0], @position[1]
 
-    
+    bishop_move = [[1,1],[-1,1],[1,-1],[-1,-1]]
+
+    bishop_move.each do |move|
+      next_row, next_column = move[0], move[1]
+      while (row+next_row).between?(0,7) &&
+            (column+next_column).between?(0,7) do
+
+        if board[row+next_row][column+next_column].nil?
+          @next_moves[:regular].push([row+next_row,column+next_column])
+        else
+          if board[row+next_row][column+next_column].color == @opposite_color
+            @next_moves[:regular].push([row+next_row,column+next_column])
+            break
+          else
+            break
+          end
+        end
+
+        next_row > 0 ? next_row += 1 : next_row -= 1
+        next_column > 0 ? next_column += 1 : next_column -= 1
+
+      end
+    end
   end
+
 end
 
 #King <=> Rook switch

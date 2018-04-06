@@ -134,10 +134,63 @@ describe 'Chess game' do
           expect(@empty_game.board.board[4][5].color).to eql('B')
         end
 
+        it "does not move to ally's piece" do
+          @game.select([7,1])
+          expect(@game.move([6,3])).to eql(nil)
+        end
+
         it 'does not make invalid moves' do
           @empty_game.board.board[3][3] = Knight.new('W',[3,3],'knight')
           @empty_game.select([3,3])
           expect(@empty_game.move([5,5])).to eql(nil)
+        end
+      end
+
+      context 'movements with bishop' do
+
+        it 'white bishop makes right move' do
+          @empty_game.board.board[3][3] = Bishop.new('W',[3,3],'bishop')
+          @empty_game.select([3,3])
+          @empty_game.move([0,0])
+          expect(@empty_game.board.board[0][0].piece).to eql('bishop')
+        end
+
+        it 'does not make invalid move' do
+          @empty_game.turn = 'B'
+          @empty_game.board.board[3][3] = Bishop.new('B',[3,3],'bishop')
+          @empty_game.select([3,3])
+          expect(@empty_game.move([2,3])).to eql(nil)
+        end
+
+        it 'does not go past ally piece' do
+          @empty_game.board.board[3][3] = Bishop.new('W',[3,3],'bishop')
+          @empty_game.board.board[1][1] = Bishop.new('W',[1,1],'bishop')
+          @empty_game.select([3,3])
+          expect(@empty_game.move([0,0])).to eql(nil)
+        end
+
+        it 'does not go past enemy piece' do
+          @empty_game.turn = 'B'
+          @empty_game.board.board[3][3] = Bishop.new('B',[3,3], 'bishop')
+          @empty_game.board.board[1][1] = Bishop.new('W',[3,3], 'bishop')
+          @empty_game.select([3,3])
+          expect(@empty_game.move([0,0])).to eql(nil)
+        end
+
+        it 'does take enemy piece' do
+          @empty_game.turn = 'B'
+          @empty_game.board.board[3][3] = Bishop.new('B',[3,3], 'bishop')
+          @empty_game.board.board[1][1] = Bishop.new('W',[3,3], 'bishop')
+          @empty_game.select([3,3])
+          @empty_game.move([1,1])
+          expect(@empty_game.board.board[1][1].color).to eql('B')
+        end
+
+        it 'does not take ally piece' do
+          @empty_game.board.board[3][3] = Bishop.new('W',[3,3], 'bishop')
+          @empty_game.board.board[1][1] = Bishop.new('W',[3,3], 'bishop')
+          @empty_game.select([3,3])
+          expect(@empty_game.move([1,1])).to eql(nil)
         end
       end
 
