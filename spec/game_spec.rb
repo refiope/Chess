@@ -291,7 +291,7 @@ describe 'Chess game' do
       context 'movements with king' do
 
         it 'makes regular movements' do
-          @empty_game.board.board[3][3] = King.new('W',[3,3],'king')
+          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)
           @empty_game.select([3,3])
           @empty_game.move([2,3])
           expect(@empty_game.board.board[2][3].piece).to eql('king')
@@ -299,7 +299,7 @@ describe 'Chess game' do
         end
 
         it 'takes enemy piece' do
-          @empty_game.board.board[3][3] = King.new('W',[3,3],'king')
+          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)
           @empty_game.board.board[2][3] = Pawn.new('B',[2,3],'pawn',false,false)
           @empty_game.select([3,3])
           @empty_game.move([2,3])
@@ -307,42 +307,42 @@ describe 'Chess game' do
         end
 
         it 'does not take ally piece' do
-          @empty_game.board.board[3][3] = King.new('W',[3,3],'king')
+          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)
           @empty_game.board.board[2][3] = Pawn.new('W',[2,3],'pawn',false,false)
           @empty_game.select([3,3])
           expect(@empty_game.move([2,3])).to eql(nil)
         end
 
         it 'does not move into check: pawn version' do
-          @empty_game.board.board[3][3] = King.new('W',[3,3],'king')
+          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)
           @empty_game.board.board[2][3] = Pawn.new('B',[1,1],'pawn',false,false)
           @empty_game.select([3,3])
           expect(@empty_game.move([2,2])).to eql(nil)
         end
 
         it 'does not move into check: knight version' do
-          @empty_game.board.board[3][3] = King.new('W',[3,3],'king')
+          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)
           @empty_game.board.board[0][1] = Knight.new('B',[0,1],'knight')
           @empty_game.select([3,3])
           expect(@empty_game.move([2,2])).to eql(nil)
         end
 
         it 'does not move into check: rook version' do
-          @empty_game.board.board[3][3] = King.new('W',[3,3],'king')
+          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)
           @empty_game.board.board[2][1] = Rook.new('B',[2,1],'rook')
           @empty_game.select([3,3])
           expect(@empty_game.move([2,2])).to eql(nil)
         end
 
         it 'does not move into check: bishop version' do
-          @empty_game.board.board[3][3] = King.new('W',[3,3],'king')
+          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)
           @empty_game.board.board[2][3] = Bishop.new('B',[2,3],'bishop')
           @empty_game.select([3,3])
           expect(@empty_game.move([3,2])).to eql(nil)
         end
 
         it 'does not move into check: queen version' do
-          @empty_game.board.board[3][3] = King.new('W',[3,3],'king')
+          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)
           @empty_game.board.board[1][2] = Queen.new('B',[1,2],'queen')
           @empty_game.select([3,3])
           expect(@empty_game.move([2,2])).to eql(nil)
