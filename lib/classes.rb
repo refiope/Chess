@@ -286,7 +286,7 @@ class Pawn < ChessPiece
       if row + move == 7 ||row + move == 0
         @next_moves[:end_pawn] = [row+move, column]
       else
-        @next_moves[:move].push([row+move, column])
+        @next_moves[:move] = [row+move, column]
       end
       if board[row + 2*move][column].nil? && @jump_used == false
         @next_moves[:jump] = [row + 2*move, column]
@@ -464,7 +464,7 @@ class King < ChessPiece
           @next_moves[:regular].push([row+move[0], column+move[1]])
         else
           if board[row+move[0]][column+move[1]].color == @opposite_color
-            @net_moves[:regular].push([row+move[0], column+move[1]])
+            @next_moves[:regular].push([row+move[0], column+move[1]])
           end
         end
       end
@@ -479,19 +479,29 @@ class King < ChessPiece
 
     board.each_index do |r|
       board[r].each do |tile|
-        if !tile.nil?
-          if tile.color == @opposite_color && tile.piece != 'pawn'
+        if tile.nil?
+          next
+        elsif tile.color == @opposite_color
+          if tile.piece != 'pawn'
             tile.get_next(board)
-            tile.next_moves[:regular].each do |potential|
-              check_board[potential[0]][potential[1]] = 'x'
+
+            if !tile.next_moves[:regular].empty?
+              tile.next_moves[:regular].each do |potential|
+                check_board[potential[0]][potential[1]] = 'x'
+              end
             end
+
           else
             clone[row+move[0]][column+move[1]] = King.new(@color,[],'king')
             clone[row][column] = nil
             tile.get_next(clone)
-            tile.next_moves[:regular].each do |potential|
-              check_board[potential[0]][potential[1]] = 'x'
+
+            if !tile.next_moves[:regular].empty?
+              tile.next_moves[:regular].each do |potential|
+                check_board[potential[0]][potential[1]] = 'x'
+              end
             end
+
           end
         end
       end
