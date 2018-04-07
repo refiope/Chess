@@ -190,7 +190,7 @@ class Game
       return input
 
     when :switch
-      
+
     else
     end
   end
@@ -460,6 +460,7 @@ class King < ChessPiece
     king_move.each do |move|
       if (row+move[0]).between?(0,7) && (column+move[1]).between?(0,7)
         if board[row+move[0]][column+move[1]].nil?
+          next if mic_check_check(row, column, move, board)
           @next_moves[:regular].push([row+move[0], column+move[1]])
         else
           if board[row+move[0]][column+move[1]].color == @opposite_color
@@ -471,7 +472,31 @@ class King < ChessPiece
 
   end
 
-  def check_check (row, column, move, board)
+  def mic_check_check (row, column, move, board)
+    check_board = []
+    clone = board
+    8.times {check_board.push(Array.new(8,nil))}
 
+    board.each_index do |r|
+      board[r].each do |tile|
+        if !tile.nil?
+          if tile.color == @opposite_color && tile.piece != 'pawn'
+            tile.get_next(board)
+            tile.next_moves[:regular].each do |potential|
+              check_board[potential[0]][potential[1]] = 'x'
+            end
+          else
+            clone[row+move[0]][column+move[1]] = King.new(@color,[],'king')
+            clone[row][column] = nil
+            tile.get_next(clone)
+            tile.next_moves[:regular].each do |potential|
+              check_board[potential[0]][potential[1]] = 'x'
+            end
+          end
+        end
+      end
+    end
+
+    check_board[row+move[0]][column+move[1]] == 'x' ? true : false
   end
 end

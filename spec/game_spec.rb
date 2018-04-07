@@ -288,6 +288,9 @@ describe 'Chess game' do
         end
       end
 
+      context 'movements with king' do
+      end
+
     end
 
   end
