@@ -171,6 +171,9 @@ class Game
   #ineligible for en_passant
   def special_move (move_type, input)
     case move_type
+    when :move
+      return input
+
     when :jump
       @selected.jump_used = true
       @selected.be_passant = true
@@ -187,6 +190,7 @@ class Game
       return input
 
     when :switch
+      
     else
     end
   end
@@ -243,6 +247,8 @@ class ChessPiece
 end
 
 #En Passant, end of the board change
+#moving only one tile is considered special move for pawn
+#because it cannot take opponent's piece this way
 class Pawn < ChessPiece
   attr_accessor :jump_used, :be_passant
 
@@ -280,7 +286,7 @@ class Pawn < ChessPiece
       if row + move == 7 ||row + move == 0
         @next_moves[:end_pawn] = [row+move, column]
       else
-        @next_moves[:regular].push([row+move, column])
+        @next_moves[:move].push([row+move, column])
       end
       if board[row + 2*move][column].nil? && @jump_used == false
         @next_moves[:jump] = [row + 2*move, column]
@@ -466,6 +472,6 @@ class King < ChessPiece
   end
 
   def check_check (row, column, move, board)
-    
+
   end
 end
