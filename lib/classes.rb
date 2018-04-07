@@ -102,6 +102,9 @@ class Game
     @selected = nil
   end
 
+  def play
+  end
+
   #a...h, 1...8
   def get_input
     order = ['a','b','c','d','e','f','g','h']
@@ -138,6 +141,7 @@ class Game
     valid_move = check_regular_move(input)
     valid_move = check_special_move(input) if valid_move.nil?
 
+    #check if there's absolutely no move to be made
     if !valid_move.nil?
       @board.board[valid_move[0]][valid_move[1]] = @selected
       @board.board[valid_move[0]][valid_move[1]].position = valid_move
@@ -156,7 +160,7 @@ class Game
     if @selected.next_moves.key(input).nil?
       puts "You can't move there"
       return nil
-      #start getting input again
+      #start getting input again?
     else
       return special_move(@selected.next_moves.key(input), input)
     end
@@ -438,5 +442,30 @@ end
 
 #King <=> Rook switch
 class King < ChessPiece
+  def get_next board
+    @next_moves = Hash.new([])
+    @next_moves[:regular] = []
 
+    row, column = @position[0], @position[1]
+
+    king_move = [[1,1],[-1,1],[1,-1],[-1,-1],
+                [1,0],[0,1],[-1,0],[0,-1]]
+
+    king_move.each do |move|
+      if (row+move[0]).between?(0,7) && (column+move[1]).between?(0,7)
+        if board[row+move[0]][column+move[1]].nil?
+          @next_moves[:regular].push([row+move[0], column+move[1]])
+        else
+          if board[row+move[0]][column+move[1]].color == @opposite_color
+            @net_moves[:regular].push([row+move[0], column+move[1]])
+          end
+        end
+      end
+    end
+
+  end
+
+  def check_check (row, column, move, board)
+    
+  end
 end
