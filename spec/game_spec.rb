@@ -350,19 +350,37 @@ describe 'Chess game' do
 
         it 'castles left' do
           @empty_game.board.board[7][4] = King.new('W',[7,4],'king')
-          puts "left: #{@empty_game.board.board[7][4].left_empty(@empty_game.board.board)}"
-          puts "right: #{@empty_game.board.board[7][4].right_empty(@empty_game.board.board)}"
-          puts "move_in_check?: #{@empty_game.board.board[7][4].move_in_check?(7,2,[0,0],@empty_game.board.board)}"
-          #@empty_game.board.board[7][7] = Rook.new('W',[7,7],'rook')
           @empty_game.board.board[7][0] = Rook.new('W',[7,0],'rook')
           @empty_game.select([7,4])
           @empty_game.move([7,2])
-          @empty_game.board.display
-          puts @empty_game.selected.next_moves
           expect(@empty_game.board.board[7][2].piece).to eql('king')
-          #expect(@empty_game.board.board[7][3].piece).to eql('rook')
           expect(@empty_game.board.board[7][0]).to eql(nil)
           expect(@empty_game.board.board[7][4]).to eql(nil)
+        end
+
+        it 'castles right' do
+          @empty_game.board.board[7][4] = King.new('W',[7,4],'king')
+          @empty_game.board.board[7][7] = Rook.new('W',[7,7],'rook')
+          @empty_game.select([7,4])
+          @empty_game.move([7,6])
+          expect(@empty_game.board.board[7][6].piece).to eql('king')
+          expect(@empty_game.board.board[7][7]).to eql(nil)
+          expect(@empty_game.board.board[7][4]).to eql(nil)
+        end
+
+        it 'does not castle if there is a piece in between king and rook' do
+          @empty_game.board.board[7][4] = King.new('W',[7,4],'king')
+          @empty_game.board.board[7][7] = Rook.new('W',[7,7],'rook')
+          @empty_game.board.board[7][5] = Knight.new('W',[7,5],'knight')
+          @empty_game.select([7,4])
+          expect(@empty_game.move([7,6])).to eql(nil)
+        end
+
+        it 'does not castle if rook has moved before' do
+          @empty_game.board.board[7][4] = King.new('W',[7,4],'king')
+          @empty_game.board.board[7][7] = Rook.new('W',[7,7],'rook',false)
+          @empty_game.select([7,4])
+          expect(@empty_game.move([7,6])).to eql(nil)
         end
       end
 

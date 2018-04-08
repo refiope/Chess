@@ -193,13 +193,13 @@ class Game
     when :left_castle
       @selected.can_castle = false
       @board.board[input[0]][0] = nil
-      @board.board[7][3] = Rook.new(@selected.color,[input[0], 3],'rook',false)
+      @board.board[input[0]][3] = Rook.new(@selected.color,[input[0], 3],'rook',false)
       return input
 
     when :right_castle
       @selected.can_castle = false
       @board.board[input[0]][7] = nil
-      #@board.board[input[0]][5]
+      @board.board[input[0]][5] = Rook.new(@selected.color, [input[0], 3], 'rook',false)
       return input
 
     else
@@ -482,6 +482,7 @@ attr_accessor :can_castle
                 [1,0],[0,1],[-1,0],[0,-1]]
 
     check_left_castle(row, board)
+    check_right_castle(row, board)
 
     king_move.each do |move|
       if (row+move[0]).between?(0,7) && (column+move[1]).between?(0,7)
@@ -540,6 +541,17 @@ attr_accessor :can_castle
     if @can_castle && !move_in_check?(row,2,[0,0],board)
       if !board[row][0].nil? && board[row][0].piece == 'rook' && board[row][0].can_castle
         @next_moves[:left_castle] = [row, 2] if left_empty(board)
+      end
+      #if !board[row][7].nil? && board[row][7].piece == 'rook' && board[row][7].can_castle
+      #  @next_moves[:right_caslte] = [row, 6] if right_empty(board) && !move_in_check?(row,6,[0,0],board)
+      #end
+    end
+  end
+
+  def check_right_castle (row,board)
+    if @can_castle && !move_in_check?(row,6,[0,0],board)
+      if !board[row][7].nil? && board[row][7].piece == 'rook' && board[row][7].can_castle
+        @next_moves[:right_castle] = [row, 6] if right_empty(board)
       end
       #if !board[row][7].nil? && board[row][7].piece == 'rook' && board[row][7].can_castle
       #  @next_moves[:right_caslte] = [row, 6] if right_empty(board) && !move_in_check?(row,6,[0,0],board)
