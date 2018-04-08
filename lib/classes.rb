@@ -15,9 +15,9 @@ class GameBoard
       print (8-row).abs
       print "|"
       @board[row].each do |column|
-        print column.symbol+" " if !column.nil?
-        print "  " if column.nil?
-        print "|"
+        print column.symbol if !column.nil?
+        print " |" if !column.nil?
+        print "  |" if column.nil?
       end
       print (8-row).abs
       puts "\n--------------------------"
@@ -45,10 +45,10 @@ class GameBoard
 
   def setup_pawn
     @board[1].each_index do |index|
-      @board[1][index] = Pawn.new('B', [1,index],'pawn', false, false)
+      @board[1][index] = Pawn.new('B', [1,index],'pawn')
     end
     @board[6].each_index do |index|
-      @board[6][index] = Pawn.new('W', [6,index],'pawn', false, false)
+      @board[6][index] = Pawn.new('W', [6,index],'pawn')
     end
   end
 
@@ -73,8 +73,8 @@ class GameBoard
   end
 
   def setup_king
-    @board[0][4] = King.new('B',[0,4],'king',true)
-    @board[7][4] = King.new('W',[7,4],'king',true)
+    @board[0][4] = King.new('B',[0,4],'king')
+    @board[7][4] = King.new('W',[7,4],'king')
   end
 
   def setup_uniques (position, class_name, piece, color)
@@ -88,10 +88,6 @@ class GameBoard
 
 end
 
-#Game needs to control special cases:
-#ex. pawns with the jump, en passant, and piece change
-#ex. rooks and kings with switch
-#switch can_castle off after movements with king
 class Game
   #accessing selected, board, turn for test purposes
   attr_accessor :turn, :board
@@ -115,7 +111,7 @@ class Game
       column = order.find_index(input[0])
       return [row, column]
     else
-      puts "wrong input"
+      puts "Wrong input"
       get_input
     end
   end
@@ -238,6 +234,8 @@ class ChessPiece
     @piece = piece
     @next_moves = Hash.new([])
     @symbol = mark(piece)
+    @row = @position[0]
+    @column = @position[1]
   end
 
   def mark piece
@@ -273,16 +271,14 @@ class Pawn < ChessPiece
     @next_moves = Hash.new([])
     @next_moves[:regular] = []
 
-    row, column = @position[0], @position[1]
-
     @color == 'W' ? move = -1 : move = 1
 
     direction = [-1,1]
     direction.each do |d|
-      check_attack(row, column, move, board, d)
-      check_en_passant(row, column, move, board, d)
+      check_attack(@row, @column, move, board, d)
+      check_en_passant(@row, @column, move, board, d)
     end
-    check_moves(row, column, move, board)
+    check_moves(@row, @column, move, board)
   end
 
   def check_attack (row, column, move, board, direction)
@@ -317,29 +313,24 @@ class Pawn < ChessPiece
 
 end
 
-#each piece needs #get_next method where it pushes next possible moves to
-#next_moves, which is initiated with class ChessPiece
-#each piece may have to check if it's checking every move
 class Knight < ChessPiece
 
   def get_next board
     @next_moves = Hash.new([])
     @next_moves[:regular] = []
 
-    row, column = @position[0], @position[1]
-
     knight_moves = [[1,2],[-1,2],[1,-2],[-1,-2],
                     [2,1],[-2,1],[2,-1],[-2,-1]]
 
     knight_moves.each do |move|
-      if (row + move[0]).between?(0,7) &&
-         (column + move[1]).between?(0,7) &&
-         if !board[row+move[0]][column+move[1]].nil?
-           if board[row+move[0]][column+move[1]].color == @opposite_color
-             @next_moves[:regular].push([row+move[0],column+move[1]])
+      if (@row + move[0]).between?(0,7) &&
+         (@column + move[1]).between?(0,7) &&
+         if !board[@row+move[0]][@column+move[1]].nil?
+           if board[@row+move[0]][@column+move[1]].color == @opposite_color
+             @next_moves[:regular].push([@row+move[0],@column+move[1]])
            end
          else
-           @next_moves[:regular].push([row+move[0],column+move[1]])
+           @next_moves[:regular].push([@row+move[0],@column+move[1]])
          end
       end
     end
@@ -353,20 +344,18 @@ class Bishop < ChessPiece
     @next_moves = Hash.new([])
     @next_moves[:regular] = []
 
-    row, column = @position[0], @position[1]
-
     bishop_move = [[1,1],[-1,1],[1,-1],[-1,-1]]
 
     bishop_move.each do |move|
       next_row, next_column = move[0], move[1]
-      while (row+next_row).between?(0,7) &&
-            (column+next_column).between?(0,7) do
+      while (@row+next_row).between?(0,7) &&
+            (@column+next_column).between?(0,7) do
 
-        if board[row+next_row][column+next_column].nil?
-          @next_moves[:regular].push([row+next_row,column+next_column])
+        if board[@row+next_row][@column+next_column].nil?
+          @next_moves[:regular].push([@row+next_row,@column+next_column])
         else
-          if board[row+next_row][column+next_column].color == @opposite_color
-            @next_moves[:regular].push([row+next_row,column+next_column])
+          if board[@row+next_row][@column+next_column].color == @opposite_color
+            @next_moves[:regular].push([@row+next_row,@column+next_column])
             break
           else
             break
@@ -394,21 +383,19 @@ class Rook < ChessPiece
     @next_moves = Hash.new([])
     @next_moves[:regular] = []
 
-    row, column = @position[0], @position[1]
-
     rook_move = [[1,0],[0,1],[-1,0],[0,-1]]
 
     rook_move.each do |move|
       next_row, next_column = move[0], move[1]
 
-      while (row+next_row).between?(0,7) &&
-              (column+next_column).between?(0,7) do
+      while (@row+next_row).between?(0,7) &&
+              (@column+next_column).between?(0,7) do
 
-       if board[row+next_row][column+next_column].nil?
-          @next_moves[:regular].push([row+next_row,column+next_column])
+       if board[@row+next_row][@column+next_column].nil?
+          @next_moves[:regular].push([@row+next_row,@column+next_column])
         else
-          if board[row+next_row][column+next_column].color == @opposite_color
-            @next_moves[:regular].push([row+next_row,column+next_column])
+          if board[@row+next_row][@column+next_column].color == @opposite_color
+            @next_moves[:regular].push([@row+next_row,@column+next_column])
             break
           else
             break
@@ -432,22 +419,20 @@ class Queen < ChessPiece
     @next_moves = Hash.new([])
     @next_moves[:regular] = []
 
-    row, column = @position[0], @position[1]
-
     queen_move = [[1,1],[-1,1],[1,-1],[-1,-1],
                   [1,0],[0,1],[-1,0],[0,-1]]
 
     queen_move.each do |move|
       next_row, next_column = move[0], move[1]
 
-      while (row+next_row).between?(0,7) &&
-            (column+next_column).between?(0,7) do
+      while (@row+next_row).between?(0,7) &&
+            (@column+next_column).between?(0,7) do
 
-        if board[row+next_row][column+next_column].nil?
-          @next_moves[:regular].push([row+next_row,column+next_column])
+        if board[@row+next_row][@column+next_column].nil?
+          @next_moves[:regular].push([@row+next_row,@column+next_column])
         else
-          if board[row+next_row][column+next_column].color == @opposite_color
-            @next_moves[:regular].push([row+next_row,column+next_column])
+          if board[@row+next_row][@column+next_column].color == @opposite_color
+            @next_moves[:regular].push([@row+next_row,@column+next_column])
             break
           else
             break
@@ -476,22 +461,20 @@ attr_accessor :can_castle
     @next_moves = Hash.new([])
     @next_moves[:regular] = []
 
-    row, column = @position[0], @position[1]
-
     king_move = [[1,1],[-1,1],[1,-1],[-1,-1],
                 [1,0],[0,1],[-1,0],[0,-1]]
 
-    check_left_castle(row, board)
-    check_right_castle(row, board)
+    check_left_castle(@row, board)
+    check_right_castle(@row, board)
 
     king_move.each do |move|
-      if (row+move[0]).between?(0,7) && (column+move[1]).between?(0,7)
-        if board[row+move[0]][column+move[1]].nil?
-          next if move_in_check?(row, column, move, board)
-          @next_moves[:regular].push([row+move[0], column+move[1]])
+      if (@row+move[0]).between?(0,7) && (@column+move[1]).between?(0,7)
+        if board[@row+move[0]][@column+move[1]].nil?
+          next if move_in_check?(@row, @column, move, board)
+          @next_moves[:regular].push([@row+move[0], @column+move[1]])
         else
-          if board[row+move[0]][column+move[1]].color == @opposite_color
-            @next_moves[:regular].push([row+move[0], column+move[1]])
+          if board[@row+move[0]][@column+move[1]].color == @opposite_color
+            @next_moves[:regular].push([@row+move[0], @column+move[1]])
           end
         end
       end
@@ -542,9 +525,6 @@ attr_accessor :can_castle
       if !board[row][0].nil? && board[row][0].piece == 'rook' && board[row][0].can_castle
         @next_moves[:left_castle] = [row, 2] if left_empty(board)
       end
-      #if !board[row][7].nil? && board[row][7].piece == 'rook' && board[row][7].can_castle
-      #  @next_moves[:right_caslte] = [row, 6] if right_empty(board) && !move_in_check?(row,6,[0,0],board)
-      #end
     end
   end
 
@@ -553,9 +533,6 @@ attr_accessor :can_castle
       if !board[row][7].nil? && board[row][7].piece == 'rook' && board[row][7].can_castle
         @next_moves[:right_castle] = [row, 6] if right_empty(board)
       end
-      #if !board[row][7].nil? && board[row][7].piece == 'rook' && board[row][7].can_castle
-      #  @next_moves[:right_caslte] = [row, 6] if right_empty(board) && !move_in_check?(row,6,[0,0],board)
-      #end
     end
   end
 
