@@ -88,6 +88,8 @@ class GameBoard
 
 end
 
+#be_passant set false on the start of turn
+#king/rook's can_castle set false when moved
 class Game
   #accessing selected, board, turn for test purposes
   attr_accessor :turn, :board
@@ -99,6 +101,16 @@ class Game
     @selected = nil
   end
 
+  #display board
+  #prints who's turn it is
+  #(done)select the given input - get it again if wrong or does not have any moves available
+  #move the selected piece - 'cancel' to select again, wrong move == recursion
+  #before moving piece, check if moving piece(other than the king) will make yourself in check
+  #--will have to clone the board and simulate(check rook, bishop, queen)
+  #before moving piece, check if opponent's king will be checked
+  # -check if it's checkmate for king
+  #change turn
+  #back to first
   def play
   end
 
@@ -121,8 +133,15 @@ class Game
 
     if @board.board[input[0]][input[1]].nil?
       puts "Choose the right piece"
+      select(get_input)
     elsif @board.board[input[0]][input[1]].color == @turn
       @selected = @board.board[input[0]][input[1]]
+      @selected.get_next(@board.board)
+
+      if @selected.next_moves[:regular].empty? && @selected.next_moves.keys[1..-1].empty?
+        puts 'Selected piece has no moves available'
+        select(get_input)
+      end
     end
 
   end
@@ -138,10 +157,11 @@ class Game
     valid_move = check_regular_move(input)
     valid_move = check_special_move(input) if valid_move.nil?
 
-    #check if there's absolutely no move to be made
     if !valid_move.nil?
       @board.board[valid_move[0]][valid_move[1]] = @selected
       @board.board[valid_move[0]][valid_move[1]].position = valid_move
+      @board.board[valid_move[0]][valid_move[1]].row = valid_move[0]
+      @board.board[valid_move[0]][valid_move[1]].column = valid_move[1]
       @board.board[row][column] = nil
     end
   end
@@ -220,11 +240,14 @@ class Game
       end
   end
 
+  def king_in_check_after?
+  end
+
 end
 
 #Access color, position, symbol, next_moves
 class ChessPiece
-  attr_accessor :color, :position, :next_moves
+  attr_accessor :color, :position, :next_moves, :row, :column
   attr_reader :symbol, :piece, :opposite_color
 
   def initialize (color, position, piece)
@@ -253,6 +276,11 @@ class ChessPiece
     return 'B' if @color == 'W'
     return 'W' if @color == 'B'
   end
+
+  def get_next board
+    @next_moves = Hash.new([])
+    @next_moves[:regular] = []
+  end
 end
 
 #En Passant, end of the board change
@@ -268,8 +296,7 @@ class Pawn < ChessPiece
   end
 
   def get_next board
-    @next_moves = Hash.new([])
-    @next_moves[:regular] = []
+  super(board)
 
     @color == 'W' ? move = -1 : move = 1
 
@@ -316,8 +343,7 @@ end
 class Knight < ChessPiece
 
   def get_next board
-    @next_moves = Hash.new([])
-    @next_moves[:regular] = []
+    super(board)
 
     knight_moves = [[1,2],[-1,2],[1,-2],[-1,-2],
                     [2,1],[-2,1],[2,-1],[-2,-1]]
@@ -341,8 +367,7 @@ end
 class Bishop < ChessPiece
 
   def get_next board
-    @next_moves = Hash.new([])
-    @next_moves[:regular] = []
+    super(color)
 
     bishop_move = [[1,1],[-1,1],[1,-1],[-1,-1]]
 
@@ -380,8 +405,7 @@ class Rook < ChessPiece
   end
 
   def get_next board
-    @next_moves = Hash.new([])
-    @next_moves[:regular] = []
+    super(color)
 
     rook_move = [[1,0],[0,1],[-1,0],[0,-1]]
 
@@ -416,8 +440,7 @@ end
 class Queen < ChessPiece
 
   def get_next board
-    @next_moves = Hash.new([])
-    @next_moves[:regular] = []
+    super(color)
 
     queen_move = [[1,1],[-1,1],[1,-1],[-1,-1],
                   [1,0],[0,1],[-1,0],[0,-1]]
@@ -458,8 +481,7 @@ attr_accessor :can_castle
   end
 
   def get_next board
-    @next_moves = Hash.new([])
-    @next_moves[:regular] = []
+    super(color)
 
     king_move = [[1,1],[-1,1],[1,-1],[-1,-1],
                 [1,0],[0,1],[-1,0],[0,-1]]
@@ -493,31 +515,37 @@ attr_accessor :can_castle
           next
         elsif tile.color == @opposite_color
           if tile.piece != 'pawn'
-            tile.get_next(board)
-
-            if !tile.next_moves[:regular].empty?
-              tile.next_moves[:regular].each do |potential|
-                check_board[potential[0]][potential[1]] = 'x'
-              end
-            end
-
+            mark_x_without_pawn(tile, row, check_board, board)
           else
-            clone[row+move[0]][column+move[1]] = King.new(@color,[],'king')
-            clone[row][column] = nil
-            tile.get_next(clone)
-
-            if !tile.next_moves[:regular].empty?
-              tile.next_moves[:regular].each do |potential|
-                check_board[potential[0]][potential[1]] = 'x'
-              end
-            end
-
+            mark_x_for_pawn(tile, row, column, move, clone, check_board)
           end
         end
       end
     end
 
     check_board[row+move[0]][column+move[1]] == 'x' ? true : false
+  end
+
+  def mark_x_without_pawn (tile, row, check_board, board)
+    tile.get_next(board)
+
+    if !tile.next_moves[:regular].empty?
+      tile.next_moves[:regular].each do |potential|
+        check_board[potential[0]][potential[1]] = 'x'
+      end
+    end
+  end
+
+  def mark_x_for_pawn (tile, row, column, move, clone, check_board)
+    clone[row+move[0]][column+move[1]] = King.new(@color,[],'king')
+    clone[row][column] = nil
+    tile.get_next(clone)
+
+    if !tile.next_moves[:regular].empty?
+      tile.next_moves[:regular].each do |potential|
+        check_board[potential[0]][potential[1]] = 'x'
+      end
+    end
   end
 
   def check_left_castle (row,board)
