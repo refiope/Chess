@@ -4,7 +4,7 @@ describe 'Chess game' do
 
   describe Game do
     #keep in mind that new game starts with white's turn
-    before(:each) do
+    before(:each) do |example|
       @game = Game.new
       @empty_board = GameBoard.new
       @empty_array = []
@@ -12,6 +12,11 @@ describe 'Chess game' do
       @empty_board.board = @empty_array
 
       @empty_game = Game.new(@empty_board)
+
+      unless example.metadata[:skip_before]
+        @empty_game.board.board[2][7] = King.new('W',[2,7],'king')
+        @empty_game.board.board[1][7] = King.new('B',[1,7],'king')
+      end
     end
 
     context '#select' do
@@ -317,7 +322,7 @@ describe 'Chess game' do
         end
       end
 
-      context 'movements with king' do
+      context 'movements with king', skip_before: true do
 
         it 'makes regular movements' do
           @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)

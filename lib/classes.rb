@@ -157,7 +157,7 @@ class Game
     valid_move = check_regular_move(input)
     valid_move = check_special_move(input) if valid_move.nil?
 
-    if !valid_move.nil?
+    if !valid_move.nil? && !king_in_check_after?(input, @board.board)
       @board.board[valid_move[0]][valid_move[1]] = @selected
       @board.board[valid_move[0]][valid_move[1]].position = valid_move
       @board.board[valid_move[0]][valid_move[1]].row = valid_move[0]
@@ -219,6 +219,7 @@ class Game
       return input
 
     else
+      puts "Special move is not recognized: check special moves of classes"
     end
   end
 
@@ -240,7 +241,46 @@ class Game
       end
   end
 
-  def king_in_check_after?
+  #check opposite's rook, bishop, queen
+  def king_in_check_after? (input, board)
+    return false if @selected.piece == 'king'
+
+    possible_pieces = ['rook','queen','bishop']
+    clone = board
+    check_board = []
+    8.times {check_board.push(Array.new(8,nil))}
+
+    clone[input[0]][input[1]] = @selected
+    clone[input[0]][input[1]].position = input
+    clone[input[0]][input[1]].row = input[0]
+    clone[input[0]][input[1]].column = input[1]
+    clone[@selected.position[0]][@selected.position[1]] = nil
+
+    clone.each_index do |row|
+      clone[row].each do |tile|
+        if !tile.nil? && tile.color == @selected.opposite_color &&
+           possible_pieces.include?(tile.piece)
+
+          tile.get_next(clone)
+          tile.next_moves[:regular].each do |move|
+            check_board[move[0]][move[1]] = 'x'
+          end
+        end
+      end
+    end
+
+    king_position = find_king(board)
+    check_board[king_position[0]][king_position[1]].nil? ? false : true
+  end
+
+  def find_king board
+    board.each_index do |row|
+      board[row].each do |tile|
+        if !tile.nil? && tile.color == @turn && tile.piece == 'king'
+          return tile.position
+        end
+      end
+    end
   end
 
 end
