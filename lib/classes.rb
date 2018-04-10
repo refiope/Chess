@@ -158,12 +158,16 @@ class Game
     valid_move = check_special_move(input) if valid_move.nil?
 
     if !valid_move.nil? && !king_in_check_after?(input, @board.board)
-      @board.board[valid_move[0]][valid_move[1]] = @selected
-      @board.board[valid_move[0]][valid_move[1]].position = valid_move
-      @board.board[valid_move[0]][valid_move[1]].row = valid_move[0]
-      @board.board[valid_move[0]][valid_move[1]].column = valid_move[1]
-      @board.board[row][column] = nil
+      move_piece(valid_move, @board.board, row, column)
     end
+  end
+
+  def move_piece (valid_move, board, row, column)
+    board[valid_move[0]][valid_move[1]] = @selected
+    board[valid_move[0]][valid_move[1]].position = valid_move
+    board[valid_move[0]][valid_move[1]].row = valid_move[0]
+    board[valid_move[0]][valid_move[1]].column = valid_move[1]
+    board[row][column] = nil
   end
 
   def check_regular_move (input)
@@ -203,7 +207,7 @@ class Game
       return input
 
     when :end_pawn
-      change_piece
+      change_piece(input)
       return input
 
     when :left_castle
@@ -223,18 +227,18 @@ class Game
     end
   end
 
-  def change_piece
+  def change_piece input
     color = @selected.color
     piece = gets.chomp
     case piece
       when 'queen'
-        @selected = Queen.new(color,[],'queen')
+        @selected = Queen.new(color,[input[0],input[1]],'queen')
       when 'knight'
-        @selected = Knight.new(color,[],'knight')
+        @selected = Knight.new(color,[input[0],input[1]],'knight')
       when 'rook'
-        @selected = Rook.new(color,[],'rook')
+        @selected = Rook.new(color,[input[0],input[1]],'rook')
       when 'bishop'
-        @selected = Bishop.new(color,[],'bishop')
+        @selected = Bishop.new(color,[input[0],input[1]],'bishop')
       else
         puts "Choose queen, knight, rook, or bishop"
         change_piece
@@ -249,12 +253,9 @@ class Game
     clone = board
     check_board = []
     8.times {check_board.push(Array.new(8,nil))}
+    row,column = @selected.position[0], @selected.position[1]
 
-    clone[input[0]][input[1]] = @selected
-    clone[input[0]][input[1]].position = input
-    clone[input[0]][input[1]].row = input[0]
-    clone[input[0]][input[1]].column = input[1]
-    clone[@selected.position[0]][@selected.position[1]] = nil
+    move_piece(input, clone, row, column)
 
     clone.each_index do |row|
       clone[row].each do |tile|
