@@ -100,6 +100,8 @@ class Game
     @turn = turn
     @selected = nil
     @in_check = false
+    @checking_piece = nil
+    @checked_king = nil
     @check_mate = false
   end
 
@@ -163,9 +165,6 @@ class Game
 
   end
 
-  #input = [n,n]
-  #this is also where you check if moving piece checks the king
-  #the only case where that happens is rook, bishop, or queen
   def move input
     @selected.get_next(@board.board)
     row, column = @selected.position[0], @selected.position[1]
@@ -189,7 +188,10 @@ class Game
     moved_piece.next_moves[:regular].each do |move|
       tile = @board.board[move[0]][move[1]]
       if !tile.nil? && tile.color == moved_piece.opposite_color && tile.piece == 'king'
+        #the other side is in check
+        @checking_piece = moved_piece
         @in_check = true
+        @checked_king = tile
         return true
       end
     end
@@ -197,7 +199,33 @@ class Game
     return false
   end
 
-  def check_mate
+  #if king is in check -> king has no moves available? ->
+  #get position of a piece that makes the king in check(there's only one)
+  #get next_moves of each
+  def check_mate?
+    @checked_king.get_next(@board.board)
+    return false if !@checked_king.next_moves[:regular].empty?
+
+    #get next_moves of checking_piece, check board if movements of each include
+    @checking_piece.get_next(@board.board)
+    clone = @board.board
+
+    clone.each_index do |row|
+      clone[row].each do |tile|
+        if !tile.nil? && tile.color == @checked_king.color && tile.piece != 'king'
+          tile.get_next(clone)
+          #get rid of knight and pawn, get rid of queen, rook, and bishop or
+          #get in the way of things. You can check if the moving piece is in the way
+          #by finding out [(checked-checking)/(checked_checking)]
+          tile.next_moves[:regular].each do |move|
+            if @checking_piece.next_moves[:regular].include?(move)
+
+            end
+          end
+
+        end
+      end
+    end
 
   end
 
