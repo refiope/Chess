@@ -437,6 +437,14 @@ describe 'Chess game' do
 
           expect(@empty_game.move([7,6])).to eql(nil)
         end
+
+        it 'does not get king in check by moving other ally piece' do
+          @empty_game.board.board[7][4] = King.new('W',[7,4],'king')
+          @empty_game.board.board[6][4] = Bishop.new('W',[6,4],'bishop')
+          @empty_game.board.board[3][4] = Rook.new('B',[3,4],'rook')
+          @empty_game.select([6,4])
+          expect(@empty_game.move([5,3])).to eql(nil)
+        end
       end
 
     end
