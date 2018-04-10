@@ -99,19 +99,36 @@ class Game
     @board = board
     @turn = turn
     @selected = nil
+    @in_check = false
+    @check_mate = false
   end
 
   #display board
   #prints who's turn it is
+  #if in check,(in check_mode) you can only choose certain pieces
+  # -your king can't castle
+  # -when you make a move and king is still in check, start over
   #(done)select the given input - get it again if wrong or does not have any moves available
   #move the selected piece - 'cancel' to select again, wrong move == recursion
   #before moving piece, check if moving piece(other than the king) will make yourself in check
   #--will have to clone the board and simulate(check rook, bishop, queen)
-  #before moving piece, check if opponent's king will be checked
-  # -check if it's checkmate for king
+  #check if opponent's king is checked
+  # -if checked, check checkmate
+  #   -check if there is no available movement for king
+  #   -if no movement available, check board for which
   #change turn
   #back to first
   def play
+    @board.display
+    puts "White's turn" if @turn == 'W'
+    puts "Black's turn" if @turn == 'B'
+    #if check_king(board) is true, be in check_mode
+  end
+
+  #You can't be checkmated on your turn. So not going to check checkmate
+  #get appropriate input until king is not checked
+  def check_mode
+
   end
 
   #a...h, 1...8
@@ -150,15 +167,47 @@ class Game
   #this is also where you check if moving piece checks the king
   #the only case where that happens is rook, bishop, or queen
   def move input
-    #this spends the turn: maybe reset all pawn's en_passant here?
     @selected.get_next(@board.board)
     row, column = @selected.position[0], @selected.position[1]
-
+    reset_passant
+    #this is where it finds its move and sets some conditions for special move
     valid_move = check_regular_move(input)
     valid_move = check_special_move(input) if valid_move.nil?
 
-    if !valid_move.nil? && !king_in_check_after?(input, @board.board)
+    if !valid_move.nil? && !king_in_check_after?(valid_move, @board.board)
       move_piece(valid_move, @board.board, row, column)
+      #if king, or rook moved, set its can_castle to false
+      @selected.can_castle = false if @selected.piece == 'rook' || @selected.piece == 'king'
+      #change turn
+    end
+  end
+
+  def move_checks_king? move
+    moved_piece = @board.board[move[0]][move[1]]
+    moved_piece.get_next(@board.board)
+
+    moved_piece.next_moves[:regular].each do |move|
+      tile = @board.board[move[0]][move[1]]
+      if !tile.nil? && tile.color == moved_piece.opposite_color && tile.piece == 'king'
+        @in_check = true
+        return true
+      end
+    end
+
+    return false
+  end
+
+  def check_mate
+
+  end
+
+  def reset_passant
+    @board.board.each_index do |row|
+      @board.board[row].each do |tile|
+        if !tile.nil? && tile.color == @turn && tile.piece == 'pawn'
+          tile.be_passant = false
+        end
+      end
     end
   end
 
@@ -187,9 +236,7 @@ class Game
     end
   end
 
-  #jump, en_passant, left and right castle, pawn-end-game
-  #hint for en_passant, every turn, the current player's pawns become
-  #ineligible for en_passant
+
   def special_move (move_type, input)
     case move_type
     when :move
@@ -283,6 +330,29 @@ class Game
       end
     end
   end
+
+=begin  def check_king board
+    king_position = find_king(board)
+    @turn == 'W' ? opponent = 'B' : opponent = 'W'
+
+    board.each_index do |row|
+      board[row].each do |tile|
+        #king can't check each other
+        if !tile.nil? && tile.color == opponent && tile.piece != 'king'
+          tile.get_next(board)
+
+          tile.next_moves[:regular].each do |move|
+            if move == king_position
+              return true
+            end
+          end
+        end
+      end
+    end
+
+    return false
+  end
+=end
 
 end
 

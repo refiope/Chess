@@ -305,7 +305,7 @@ describe 'Chess game' do
 
         it 'does take enemy piece' do
           @empty_game.turn = 'B'
-          @empty_game.board.board[3][3] = Queen.new('B',[3,3], 'rook')
+          @empty_game.board.board[3][3] = Queen.new('B',[3,3], 'queen')
           @empty_game.board.board[6][6] = Rook.new('W',[6,6], 'rook')
           @empty_game.select([3,3])
           @empty_game.move([6,6])
@@ -314,7 +314,7 @@ describe 'Chess game' do
         end
 
         it 'does not take ally piece' do
-          @empty_game.board.board[3][3] = Queen.new('W',[3,3], 'rook')
+          @empty_game.board.board[3][3] = Queen.new('W',[3,3], 'queen')
           @empty_game.board.board[5][1] = Bishop.new('W',[5,1], 'rook')
           @empty_game.select([3,3])
 
