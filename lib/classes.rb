@@ -211,10 +211,9 @@ class Game
     #get next_moves of checking_piece, check board if movements of each include
     @checking_piece.get_next(@board.board)
     row, column = @checking_piece.position[0], @checking_piece.position[1]
-    clone = @board.board
 
-    clone.each_index do |row|
-      clone[row].each do |tile|
+    @board.board.each_index do |row|
+      @board.board[row].each do |tile|
         if !tile.nil? && tile.color == @checked_king.color && tile.piece != 'king'
           tile.get_next(clone)
 
@@ -637,6 +636,7 @@ class Queen < ChessPiece
 end
 
 #King <=> Rook switch
+#this class needs fix endless loop
 class King < ChessPiece
 attr_accessor :can_castle
 
@@ -691,6 +691,7 @@ attr_accessor :can_castle
     check_board[row+move[0]][column+move[1]] == 'x' ? true : false
   end
 
+  #seperate mark method for king since it goes on infinite loop?
   def mark_x_without_pawn (tile, row, check_board, board)
     tile.get_next(board)
 

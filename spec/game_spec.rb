@@ -495,10 +495,30 @@ describe 'Chess game' do
       @empty_game.checked_king = @empty_game.board.board[2][7]
       expect(@empty_game.check_in_the_way(@empty_game.board.board[1][7])).to eql(false)
     end
+
+    it 'returns false even if there is no piece that can be in between' do
+      @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
+      @empty_game.board.board[1][7] = Rook.new('B',[1,7],'rook')
+      @empty_game.board.display
+      @empty_game.checking_piece = @empty_game.board.board[2][2]
+      @empty_game.checked_king = @empty_game.board.board[2][7]
+      expect(@empty_game.check_in_the_way(@empty_game.board.board[1][7])).to eql(false)
+    end
   end
 
-  context '#check_mate?' do
-  end
-  end
+  #manually set @checked_king and @checking_piece
+=begin  context '#check_mate?' do
+
+      it 'returns false if there is a regular move available for king' do
+        @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
+        @empty_game.board.board[2][7].can_castle = false
+        @empty_game.board.board[4][7].can_castle = false
+        @empty_game.checking_piece = @empty_game.board.board[2][2]
+        @empty_game.checked_king = @empty_game.board.board[2][7]
+        expect(@empty_game.check_mate?).to eql(false)
+      end
+    end
+=end
+ end
 
 end
