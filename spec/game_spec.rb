@@ -14,8 +14,8 @@ describe 'Chess game' do
       @empty_game = Game.new(@empty_board)
 
       unless example.metadata[:skip_before]
-        @empty_game.board.board[2][7] = King.new('W',[2,7],'king')
-        @empty_game.board.board[1][7] = King.new('B',[1,7],'king')
+        @empty_game.board.board[4][7] = King.new('W',[4,7],'king')
+        @empty_game.board.board[2][7] = King.new('B',[2,7],'king')
       end
     end
 
@@ -449,6 +449,56 @@ describe 'Chess game' do
 
     end
 
+  context '#move_checks_king?' do
+
+    #[4,7] = white king
+    #[2,7] = black king
+    it 'works' do
+      @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
+      @empty_game.board.display
+      expect(@empty_game.move_checks_king?([2,2])).to eql(true)
+    end
+
+    it 'does not return true when it is not in check' do
+      @empty_game.board.board[1][5] = Queen.new('W',[1,5],'queen')
+      @empty_game.board.display
+      expect(@empty_game.move_checks_king?([1,5])).to eql(false)
+    end
+
+    it 'should return false if there is a piece in between' do
+      @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
+      @empty_game.board.board[2][5] = Knight.new('B',[2,5],'knight')
+      @empty_game.board.display
+      expect(@empty_game.move_checks_king?([2,2])).to eql(false)
+    end
+
+  end
+
+  #this method assumes there is no move available for king
+  #have to manually set @checking_piece and @checked_king
+  context '#check_in_the_way' do
+
+    it 'returns true if there is something that can be in between' do
+      @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
+      @empty_game.board.board[1][7] = Knight.new('B',[1,7], 'knight')
+      @empty_game.board.display
+      @empty_game.checking_piece = @empty_game.board.board[2][2]
+      @empty_game.checked_king = @empty_game.board.board[2][7]
+      expect(@empty_game.check_in_the_way(@empty_game.board.board[1][7])).to eql(true)
+    end
+
+    it 'returns false if there is no piece that can be in between' do
+      @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
+      @empty_game.board.board[1][7] = Rook.new('B',[1,7],'rook')
+      @empty_game.board.display
+      @empty_game.checking_piece = @empty_game.board.board[2][2]
+      @empty_game.checked_king = @empty_game.board.board[2][7]
+      expect(@empty_game.check_in_the_way(@empty_game.board.board[1][7])).to eql(false)
+    end
+  end
+
+  context '#check_mate?' do
+  end
   end
 
 end

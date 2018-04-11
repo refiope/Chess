@@ -91,8 +91,8 @@ end
 #be_passant set false on the start of turn
 #king/rook's can_castle set false when moved
 class Game
-  #accessing selected, board, turn for test purposes
-  attr_accessor :turn, :board
+  #accessing variables for test purposes
+  attr_accessor :turn, :board, :checking_piece, :checked_king
   attr_reader :selected
 
   def initialize (board=GameBoard.new, turn='W')
@@ -234,13 +234,17 @@ class Game
   def check_in_the_way tile
     #from king to checking_piece
     direction_row = @checking_piece.position[0] - @checked_king.position[0]
+    direction_row = direction_row/direction_row.abs if direction_row != 0
     direction_column = @checking_piece.position[1] - @checked_king.position[1]
+    direction_column = direction_column/direction_column.abs if direction_column != 0
     direction = [direction_row, direction_column]
 
+    tile.get_next(@board.board)
     tile.next_moves[:regular].each do |move|
       d = direction
       while (move[0]+d[0]).between?(0,7) && (move[1]+d[1]).between?(0,7) do
-        if @board.board[move[0]+d[0]][move[1]+d[1]] == @checking_piece
+        checking_tile = @board.board[move[0]+d[0]][move[1]+d[1]]
+        if checking_tile == @checking_piece
           return true
         end
         d[0] += 1 if d[0] > 0
