@@ -205,28 +205,51 @@ class Game
   def check_mate?
     @checked_king.get_next(@board.board)
     return false if !@checked_king.next_moves[:regular].empty?
-
+    #need to get rid of or get in the way of
+    special_case = ['rook','bishop','queen']
+    special_case = true if special_case.include?(@checking_piece.piece)
     #get next_moves of checking_piece, check board if movements of each include
     @checking_piece.get_next(@board.board)
+    row, column = @checking_piece.position[0], @checking_piece.position[1]
     clone = @board.board
 
     clone.each_index do |row|
       clone[row].each do |tile|
         if !tile.nil? && tile.color == @checked_king.color && tile.piece != 'king'
           tile.get_next(clone)
-          #get rid of knight and pawn, get rid of queen, rook, and bishop or
-          #get in the way of things. You can check if the moving piece is in the way
-          #by finding out [(checked-checking)/(checked_checking)]
-          tile.next_moves[:regular].each do |move|
-            if @checking_piece.next_moves[:regular].include?(move)
 
-            end
+          if tile.next_moves[:regular].include?([row, column])
+            return false
+          elsif special_case == true
+            return false if check_in_the_way(tile) == true
           end
-
         end
       end
     end
 
+    return true
+
+  end
+
+  def check_in_the_way tile
+    #from king to checking_piece
+    direction_row = @checking_piece.position[0] - @checked_king.position[0]
+    direction_column = @checking_piece.position[1] - @checked_king.position[1]
+    direction = [direction_row, direction_column]
+
+    tile.next_moves[:regular].each do |move|
+      d = direction
+      while (move[0]+d[0]).between?(0,7) && (move[1]+d[1]).between?(0,7) do
+        if @board.board[move[0]+d[0]][move[1]+d[1]] == @checking_piece
+          return true
+        end
+        d[0] += 1 if d[0] > 0
+        d[0] -= 1 if d[0] < 0
+        d[1] += 1 if d[1] > 0
+        d[1] -= 1 if d[1] < 0
+      end
+    end
+    return false
   end
 
   def reset_passant
@@ -258,7 +281,6 @@ class Game
     if @selected.next_moves.key(input).nil?
       puts "You can't move there"
       return nil
-      #start getting input again?
     else
       return special_move(@selected.next_moves.key(input), input)
     end
