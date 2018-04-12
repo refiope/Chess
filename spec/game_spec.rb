@@ -553,6 +553,20 @@ describe 'Chess game' do
         expect(@empty_game.check_mate?).to eql(true)
       end
     end
+
+    context '#check_king' do
+
+      it "returns true when it's in check" do
+        @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
+        @empty_game.turn = 'B'
+        expect(@empty_game.check_king(@empty_game.board.board)).to eql(true)
+      end
+
+      it 'returns false when no check' do
+        @empty_game.turn = 'B'
+        expect(@empty_game.check_king(@empty_game.board.board)).to eql(false)
+      end
+    end
  end
 
 end

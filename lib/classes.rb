@@ -121,16 +121,34 @@ class Game
   #change turn
   #back to first
   def play
-    @board.display
-    puts "White's turn" if @turn == 'W'
-    puts "Black's turn" if @turn == 'B'
-    #if check_king(board) is true, be in check_mode
+    while(!@check_mate) do
+      @board.display
+      puts "White's turn" if @turn == 'W'
+      puts "Black's turn" if @turn == 'B'
+      #if check_king(board) is true, be in check_mode
+      if @in_check
+        check_mode
+      else
+        puts "Select piece: "
+        select(get_input) #sets @selected
+        puts "You selected #{@selected.piece}. Choose where to move your piece: "
+        move(get_input)
+        @turn = 'W' if @turn == 'B'
+        @turn = 'B' if @turn == 'W'
+      end
+    end
+
   end
 
   #You can't be checkmated on your turn. So not going to check checkmate
   #get appropriate input until king is not checked
   def check_mode
-
+    puts "Select piece: "
+    select(get_input) #sets @selected
+    puts "You selected #{@selected.piece}. Choose where to move your piece: "
+    move(get_input)
+    @turn = 'W' if @turn == 'B'
+    @turn = 'B' if @turn == 'W'
   end
 
   #a...h, 1...8
@@ -173,11 +191,14 @@ class Game
     valid_move = check_regular_move(input)
     valid_move = check_special_move(input) if valid_move.nil?
 
-    if !valid_move.nil? && !king_in_check_after?(valid_move, @board.board)
+    if valid_move.nil?
+      return nil
+    elsif !king_in_check_after?(valid_move, @board.board)
       move_piece(valid_move, @board.board, row, column)
-      #if king, or rook moved, set its can_castle to false
+      if move_checks_king?(valid_move)
+        @check_mate = true if check_mate?
+      end
       @selected.can_castle = false if @selected.piece == 'rook' || @selected.piece == 'king'
-      #change turn
     end
   end
 
@@ -288,7 +309,6 @@ class Game
     end
   end
 
-
   def special_move (move_type, input)
     case move_type
     when :move
@@ -340,7 +360,7 @@ class Game
         @selected = Bishop.new(color,[input[0],input[1]],'bishop')
       else
         puts "Choose queen, knight, rook, or bishop"
-        change_piece
+        change_piece(input)
       end
   end
 
@@ -383,7 +403,7 @@ class Game
     end
   end
 
-=begin  def check_king board
+  def check_king board
     king_position = find_king(board)
     @turn == 'W' ? opponent = 'B' : opponent = 'W'
 
@@ -394,9 +414,7 @@ class Game
           tile.get_next(board)
 
           tile.next_moves[:regular].each do |move|
-            if move == king_position
-              return true
-            end
+              return true if move == king_position
           end
         end
       end
@@ -404,7 +422,6 @@ class Game
 
     return false
   end
-=end
 
 end
 
