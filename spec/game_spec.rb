@@ -507,7 +507,7 @@ describe 'Chess game' do
   end
 
   #manually set @checked_king and @checking_piece
-=begin  context '#check_mate?' do
+    context '#check_mate?' do
 
       it 'returns false if there is a regular move available for king' do
         @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
@@ -517,8 +517,42 @@ describe 'Chess game' do
         @empty_game.checked_king = @empty_game.board.board[2][7]
         expect(@empty_game.check_mate?).to eql(false)
       end
+      #47  27
+      it 'returns false if there is a piece that can take checking_piece out' do
+        @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
+        @empty_game.board.board[1][2] = Rook.new('W',[1,2],'rook')
+        @empty_game.board.board[3][1] = Bishop.new('B',[3,1],'bishop')
+        @empty_game.board.display
+        @empty_game.board.board[2][7].can_castle = false
+        @empty_game.board.board[4][7].can_castle = false
+        @empty_game.checking_piece = @empty_game.board.board[2][2]
+        @empty_game.checked_king = @empty_game.board.board[2][7]
+        expect(@empty_game.check_mate?).to eql(false)
+      end
+
+      it 'returns false if there is a piece that can be in between' do
+        @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
+        @empty_game.board.board[1][2] = Rook.new('W',[1,2],'rook')
+        @empty_game.board.board[3][1] = Bishop.new('B',[3,1],'bishop')
+        @empty_game.board.display
+        @empty_game.board.board[2][7].can_castle = false
+        @empty_game.board.board[4][7].can_castle = false
+        @empty_game.checking_piece = @empty_game.board.board[2][2]
+        @empty_game.checked_king = @empty_game.board.board[2][7]
+        expect(@empty_game.check_mate?).to eql(false)
+      end
+
+      it 'returns true if there is no piece to take checking_piece out' do
+        @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
+        @empty_game.board.board[1][2] = Rook.new('W',[1,2],'rook')
+        @empty_game.board.display
+        @empty_game.board.board[2][7].can_castle = false
+        @empty_game.board.board[4][7].can_castle = false
+        @empty_game.checking_piece = @empty_game.board.board[2][2]
+        @empty_game.checked_king = @empty_game.board.board[2][7]
+        expect(@empty_game.check_mate?).to eql(true)
+      end
     end
-=end
  end
 
 end

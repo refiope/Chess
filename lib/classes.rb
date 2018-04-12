@@ -210,14 +210,13 @@ class Game
     special_case = true if special_case.include?(@checking_piece.piece)
     #get next_moves of checking_piece, check board if movements of each include
     @checking_piece.get_next(@board.board)
-    row, column = @checking_piece.position[0], @checking_piece.position[1]
+    c_row, c_column = @checking_piece.position[0], @checking_piece.position[1]
 
     @board.board.each_index do |row|
       @board.board[row].each do |tile|
         if !tile.nil? && tile.color == @checked_king.color && tile.piece != 'king'
-          tile.get_next(clone)
-
-          if tile.next_moves[:regular].include?([row, column])
+          tile.get_next(@board.board)
+          if tile.next_moves[:regular].include?([c_row, c_column])
             return false
           elsif special_case == true
             return false if check_in_the_way(tile) == true
@@ -679,10 +678,12 @@ attr_accessor :can_castle
         if tile.nil?
           next
         elsif tile.color == @opposite_color
-          if tile.piece != 'pawn'
-            mark_x_without_pawn(tile, row, check_board, board)
-          else
+          if tile.piece == 'pawn'
             mark_x_for_pawn(tile, row, column, move, clone, check_board)
+          elsif tile.piece == 'king'
+            mark_x_for_king(tile, check_board, board)
+          else
+            mark_x_without(tile, check_board, board)
           end
         end
       end
@@ -692,7 +693,7 @@ attr_accessor :can_castle
   end
 
   #seperate mark method for king since it goes on infinite loop?
-  def mark_x_without_pawn (tile, row, check_board, board)
+  def mark_x_without (tile, check_board, board)
     tile.get_next(board)
 
     if !tile.next_moves[:regular].empty?
@@ -700,6 +701,21 @@ attr_accessor :can_castle
         check_board[potential[0]][potential[1]] = 'x'
       end
     end
+  end
+
+  def mark_x_for_king (tile, check_board, board)
+    king_move = [[1,1],[-1,1],[1,-1],[-1,-1],
+                [1,0],[0,1],[-1,0],[0,-1]]
+    row, column = tile.position[0], tile.position[1]
+
+    king_move.each do |move|
+      if (row+move[0]).between?(0,7) && (column+move[1]).between?(0,7)
+        if board[row+move[0]][column+move[1]].nil?
+          check_board[row+move[0]][column+move[1]] = 'x'
+        end
+      end
+    end
+
   end
 
   def mark_x_for_pawn (tile, row, column, move, clone, check_board)
