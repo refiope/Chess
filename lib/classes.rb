@@ -105,21 +105,6 @@ class Game
     @check_mate = false
   end
 
-  #display board
-  #prints who's turn it is
-  #if in check,(in check_mode) you can only choose certain pieces
-  # -your king can't castle
-  # -when you make a move and king is still in check, start over
-  #(done)select the given input - get it again if wrong or does not have any moves available
-  #move the selected piece - 'cancel' to select again, wrong move == recursion
-  #before moving piece, check if moving piece(other than the king) will make yourself in check
-  #--will have to clone the board and simulate(check rook, bishop, queen)
-  #check if opponent's king is checked
-  # -if checked, check checkmate
-  #   -check if there is no available movement for king
-  #   -if no movement available, check board for which
-  #change turn
-  #back to first
   def play
     while(!@check_mate) do
       @board.display
@@ -127,17 +112,20 @@ class Game
       puts "Black's turn" if @turn == 'B'
       #if check_king(board) is true, be in check_mode
       if @in_check
+        puts "#{@turn} in check"
         check_mode
       else
         puts "Select piece: "
         select(get_input) #sets @selected
         puts "You selected #{@selected.piece}. Choose where to move your piece: "
-        move(get_input)
-        @turn = 'W' if @turn == 'B'
-        @turn = 'B' if @turn == 'W'
+        get_move
+        change_turn
       end
     end
+  end
 
+  def change_turn
+    @turn == 'W' ? @turn = 'B' : @turn = 'W'
   end
 
   #You can't be checkmated on your turn. So not going to check checkmate
@@ -146,9 +134,8 @@ class Game
     puts "Select piece: "
     select(get_input) #sets @selected
     puts "You selected #{@selected.piece}. Choose where to move your piece: "
-    move(get_input)
-    @turn = 'W' if @turn == 'B'
-    @turn = 'B' if @turn == 'W'
+    check_mode if check_mode_move(get_input).nil?
+    change_turn
   end
 
   #a...h, 1...8
@@ -167,7 +154,6 @@ class Game
 
   #input = [n,n]
   def select input
-
     if @board.board[input[0]][input[1]].nil?
       puts "Choose the right piece"
       select(get_input)
@@ -183,6 +169,10 @@ class Game
 
   end
 
+  def get_move
+    get_move if move(get_input).nil?
+  end
+
   def move input
     @selected.get_next(@board.board)
     row, column = @selected.position[0], @selected.position[1]
@@ -192,13 +182,45 @@ class Game
     valid_move = check_special_move(input) if valid_move.nil?
 
     if valid_move.nil?
+      puts "#{@selected.piece} can't move there. Choose again"
       return nil
     elsif !king_in_check_after?(valid_move, @board.board)
       move_piece(valid_move, @board.board, row, column)
+      #this one is the problem
       if move_checks_king?(valid_move)
         @check_mate = true if check_mate?
       end
       @selected.can_castle = false if @selected.piece == 'rook' || @selected.piece == 'king'
+      @selected.jump_used = true if @selected.piece == 'pawn'
+      return true
+    end
+  end
+
+  #using clone makes things weird. this needs fix. probably because i'm chaning the value
+  #of an object inside the clone, where i shouldn't
+  def check_mode_move input
+    clone = @board.board
+    @selected.get_next(clone)
+    row, column = @selected.position[0], @selected.position[1]
+    reset_passant
+
+    valid_move = check_regular_move(input)
+    valid_move = check_special_move(input) if valid_move.nil?
+
+    if valid_move.nil?
+      return nil
+    else
+      move_piece(valid_move, clone, row, column)
+      return nil if check_king(clone)
+
+      move_piece(valid_move, @board.board, row, column)
+      @board.display
+      if move_checks_king?(valid_move)
+        @check_mate = true if check_mate?
+      end
+      @selected.can_castle = false if @selected.piece == 'rook' || @selected.piece == 'king'
+      @selected.jump_used = true if @selected.piece == 'pawn'
+      return true
     end
   end
 
@@ -217,6 +239,9 @@ class Game
       end
     end
 
+    @checking_piece = nil
+    @in_check = false
+    @checked_king = nil
     return false
   end
 
@@ -687,7 +712,6 @@ attr_accessor :can_castle
 
   def move_in_check? (row, column, move, board)
     check_board = []
-    clone = board
     8.times {check_board.push(Array.new(8,nil))}
 
     board.each_index do |r|
@@ -696,7 +720,7 @@ attr_accessor :can_castle
           next
         elsif tile.color == @opposite_color
           if tile.piece == 'pawn'
-            mark_x_for_pawn(tile, row, column, move, clone, check_board)
+            mark_x_for_pawn(tile, row, column, move, board, check_board)
           elsif tile.piece == 'king'
             mark_x_for_king(tile, check_board, board)
           else
@@ -735,9 +759,10 @@ attr_accessor :can_castle
 
   end
 
-  def mark_x_for_pawn (tile, row, column, move, clone, check_board)
+  def mark_x_for_pawn (tile, row, column, move, board, check_board)
+    clone = board
     clone[row+move[0]][column+move[1]] = King.new(@color,[],'king')
-    clone[row][column] = nil
+    #clone[row][column] = nil
     tile.get_next(clone)
 
     if !tile.next_moves[:regular].empty?
@@ -748,17 +773,17 @@ attr_accessor :can_castle
   end
 
   def check_left_castle (row,board)
-    if @can_castle && !move_in_check?(row,2,[0,0],board)
+    if @can_castle && left_empty(board) && !move_in_check?(row,2,[0,0],board)
       if !board[row][0].nil? && board[row][0].piece == 'rook' && board[row][0].can_castle
-        @next_moves[:left_castle] = [row, 2] if left_empty(board)
+        @next_moves[:left_castle] = [row, 2]
       end
     end
   end
 
   def check_right_castle (row,board)
-    if @can_castle && !move_in_check?(row,6,[0,0],board)
+    if @can_castle && right_empty(board) && !move_in_check?(row,6,[0,0],board)
       if !board[row][7].nil? && board[row][7].piece == 'rook' && board[row][7].can_castle
-        @next_moves[:right_castle] = [row, 6] if right_empty(board)
+        @next_moves[:right_castle] = [row, 6]
       end
     end
   end

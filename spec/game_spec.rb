@@ -455,20 +455,17 @@ describe 'Chess game' do
     #[2,7] = black king
     it 'works' do
       @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
-      @empty_game.board.display
       expect(@empty_game.move_checks_king?([2,2])).to eql(true)
     end
 
     it 'does not return true when it is not in check' do
       @empty_game.board.board[1][5] = Queen.new('W',[1,5],'queen')
-      @empty_game.board.display
       expect(@empty_game.move_checks_king?([1,5])).to eql(false)
     end
 
     it 'should return false if there is a piece in between' do
       @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
       @empty_game.board.board[2][5] = Knight.new('B',[2,5],'knight')
-      @empty_game.board.display
       expect(@empty_game.move_checks_king?([2,2])).to eql(false)
     end
 
@@ -481,7 +478,6 @@ describe 'Chess game' do
     it 'returns true if there is something that can be in between' do
       @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
       @empty_game.board.board[1][7] = Knight.new('B',[1,7], 'knight')
-      @empty_game.board.display
       @empty_game.checking_piece = @empty_game.board.board[2][2]
       @empty_game.checked_king = @empty_game.board.board[2][7]
       expect(@empty_game.check_in_the_way(@empty_game.board.board[1][7])).to eql(true)
@@ -490,7 +486,6 @@ describe 'Chess game' do
     it 'returns false if there is no piece that can be in between' do
       @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
       @empty_game.board.board[1][7] = Rook.new('B',[1,7],'rook')
-      @empty_game.board.display
       @empty_game.checking_piece = @empty_game.board.board[2][2]
       @empty_game.checked_king = @empty_game.board.board[2][7]
       expect(@empty_game.check_in_the_way(@empty_game.board.board[1][7])).to eql(false)
@@ -499,7 +494,6 @@ describe 'Chess game' do
     it 'returns false even if there is no piece that can be in between' do
       @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
       @empty_game.board.board[1][7] = Rook.new('B',[1,7],'rook')
-      @empty_game.board.display
       @empty_game.checking_piece = @empty_game.board.board[2][2]
       @empty_game.checked_king = @empty_game.board.board[2][7]
       expect(@empty_game.check_in_the_way(@empty_game.board.board[1][7])).to eql(false)
@@ -517,12 +511,11 @@ describe 'Chess game' do
         @empty_game.checked_king = @empty_game.board.board[2][7]
         expect(@empty_game.check_mate?).to eql(false)
       end
-      #47  27
+
       it 'returns false if there is a piece that can take checking_piece out' do
         @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
         @empty_game.board.board[1][2] = Rook.new('W',[1,2],'rook')
         @empty_game.board.board[3][1] = Bishop.new('B',[3,1],'bishop')
-        @empty_game.board.display
         @empty_game.board.board[2][7].can_castle = false
         @empty_game.board.board[4][7].can_castle = false
         @empty_game.checking_piece = @empty_game.board.board[2][2]
@@ -534,7 +527,6 @@ describe 'Chess game' do
         @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
         @empty_game.board.board[1][2] = Rook.new('W',[1,2],'rook')
         @empty_game.board.board[3][1] = Bishop.new('B',[3,1],'bishop')
-        @empty_game.board.display
         @empty_game.board.board[2][7].can_castle = false
         @empty_game.board.board[4][7].can_castle = false
         @empty_game.checking_piece = @empty_game.board.board[2][2]
@@ -545,7 +537,6 @@ describe 'Chess game' do
       it 'returns true if there is no piece to take checking_piece out' do
         @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
         @empty_game.board.board[1][2] = Rook.new('W',[1,2],'rook')
-        @empty_game.board.display
         @empty_game.board.board[2][7].can_castle = false
         @empty_game.board.board[4][7].can_castle = false
         @empty_game.checking_piece = @empty_game.board.board[2][2]
@@ -567,6 +558,38 @@ describe 'Chess game' do
         expect(@empty_game.check_king(@empty_game.board.board)).to eql(false)
       end
     end
- end
+
+    context '#check_mode_move' do
+      it "returns false if king is still in check after move" do
+        @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
+        @empty_game.board.board[1][7] = Knight.new('B',[1,7], 'knight')
+        @empty_game.turn = 'B'
+        @empty_game.checking_piece = @empty_game.board.board[2][2]
+        @empty_game.checked_king = @empty_game.board.board[2][7]
+        @empty_game.select([1,7])
+        expect(@empty_game.check_mode_move([0,5])).to eql(nil)
+      end
+
+      it "returns true if king is not in check after other move" do
+        @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
+        @empty_game.board.board[1][7] = Knight.new('B',[1,7], 'knight')
+        @empty_game.turn = 'B'
+        @empty_game.checking_piece = @empty_game.board.board[2][2]
+        @empty_game.checked_king = @empty_game.board.board[2][7]
+        @empty_game.select([1,7])
+        expect(@empty_game.check_mode_move([2,5])).to eql(true)
+      end
+
+      it "returns true if king is not in check after king move" do
+        @empty_game.board.board[2][2] = Rook.new('W',[2,2],'rook')
+        @empty_game.board.board[1][7] = Knight.new('B',[1,7], 'knight')
+        @empty_game.turn = 'B'
+        @empty_game.checking_piece = @empty_game.board.board[2][2]
+        @empty_game.checked_king = @empty_game.board.board[2][7]
+        @empty_game.select([2,7])
+        expect(@empty_game.check_mode_move([1,6])).to eql(true)
+      end
+    end
+  end
 
 end
