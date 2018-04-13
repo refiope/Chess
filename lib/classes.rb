@@ -103,10 +103,11 @@ class Game
     @checking_piece = nil
     @checked_king = nil
     @check_mate = false
+    @stale_mate = false
   end
 
   def play
-    while(!@check_mate) do
+    while(!@check_mate || !@stale_mate) do
       @board.display
       puts "White's turn" if @turn == 'W'
       puts "Black's turn" if @turn == 'B'
