@@ -19,6 +19,10 @@ describe 'Chess game' do
       end
     end
 
+    #after(:each) do
+    #  @empty_game.board.display
+    #end
+
     context '#select' do
 
       it 'selects the right piece' do
@@ -334,7 +338,7 @@ describe 'Chess game' do
         end
 
         it 'takes enemy piece' do
-          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)
+          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',false)
           @empty_game.board.board[2][3] = Pawn.new('B',[2,3],'pawn',false,false)
           @empty_game.select([3,3])
           @empty_game.move([2,3])
@@ -343,7 +347,7 @@ describe 'Chess game' do
         end
 
         it 'does not take ally piece' do
-          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)
+          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',false)
           @empty_game.board.board[2][3] = Pawn.new('W',[2,3],'pawn',false,false)
           @empty_game.select([3,3])
 
@@ -351,15 +355,15 @@ describe 'Chess game' do
         end
 
         it 'does not move into check: pawn version' do
-          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)
-          @empty_game.board.board[2][3] = Pawn.new('B',[1,1],'pawn',false,false)
+          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',false)
+          @empty_game.board.board[0][7] = King.new('B',[0,7],'king',false)
+          @empty_game.board.board[2][3] = Pawn.new('B',[2,3],'pawn',false,false)
           @empty_game.select([3,3])
-
-          expect(@empty_game.move([2,2])).to eql(nil)
+          expect(@empty_game.move([3,2])).to eql(nil)
         end
 
         it 'does not move into check: knight version' do
-          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)
+          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',false)
           @empty_game.board.board[0][1] = Knight.new('B',[0,1],'knight')
           @empty_game.select([3,3])
 
@@ -367,7 +371,7 @@ describe 'Chess game' do
         end
 
         it 'does not move into check: rook version' do
-          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)
+          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',false)
           @empty_game.board.board[2][1] = Rook.new('B',[2,1],'rook')
           @empty_game.select([3,3])
 
@@ -375,7 +379,7 @@ describe 'Chess game' do
         end
 
         it 'does not move into check: bishop version' do
-          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)
+          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',false)
           @empty_game.board.board[2][3] = Bishop.new('B',[2,3],'bishop')
           @empty_game.select([3,3])
 
@@ -383,7 +387,7 @@ describe 'Chess game' do
         end
 
         it 'does not move into check: queen version' do
-          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',true)
+          @empty_game.board.board[3][3] = King.new('W',[3,3],'king',false)
           @empty_game.board.board[1][2] = Queen.new('B',[1,2],'queen')
           @empty_game.select([3,3])
 
@@ -589,6 +593,19 @@ describe 'Chess game' do
         @empty_game.select([2,7])
         expect(@empty_game.check_mode_move([1,6])).to eql(true)
       end
+    end
+
+    context '#stale_mate?', skip_before: true do
+
+      it "returns true if no moves available for every ally piece" do
+        @empty_game.board.board[6][3] = Pawn.new('B',[6,3],'pawn',false,false)
+        @empty_game.board.board[7][3] = King.new('W',[7,3],'king',false)
+        @empty_game.board.board[5][3] = Queen.new('B',[5,3],'queen')
+        @empty_game.board.board[5][7] = Pawn.new('W',[5,7],'pawn',false,false)
+        @empty_game.board.board[4][7] = Pawn.new('B',[4,7],'pawn',false,false)
+        expect(@empty_game.stale_mate?).to be true
+      end
+
     end
   end
 

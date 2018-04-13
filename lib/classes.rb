@@ -103,19 +103,19 @@ class Game
     @checking_piece = nil
     @checked_king = nil
     @check_mate = false
-    @stale_mate = false
   end
 
   def play
-    while(!@check_mate || !@stale_mate) do
+    while(!@check_mate) do
       @board.display
-      puts "White's turn" if @turn == 'W'
-      puts "Black's turn" if @turn == 'B'
       #if check_king(board) is true, be in check_mode
       if @in_check
+        display_turn
         puts "#{@turn} in check"
         check_mode
       else
+        break if stale_mate?
+        display_turn
         puts "Select piece: "
         select(get_input) #sets @selected
         puts "You selected #{@selected.piece}. Choose where to move your piece: "
@@ -123,6 +123,11 @@ class Game
         change_turn
       end
     end
+  end
+
+  def display_turn
+    puts "White's turn" if @turn == 'W'
+    puts "Black's turn" if @turn == 'B'
   end
 
   def change_turn
@@ -274,6 +279,24 @@ class Game
 
     return true
 
+  end
+
+  def stale_mate?
+    @board.board.each_index do |row|
+      @board.board[row].each do |tile|
+        if !tile.nil? && tile.color == @turn
+          tile.get_next(@board.board)
+          if tile.next_moves[:regular].empty? && tile.next_moves[1..-1].empty?
+            next
+          else
+            @board.display
+            return false
+          end
+        end
+      end
+    end
+
+    return true
   end
 
   def check_in_the_way tile
@@ -693,8 +716,8 @@ attr_accessor :can_castle
     king_move = [[1,1],[-1,1],[1,-1],[-1,-1],
                 [1,0],[0,1],[-1,0],[0,-1]]
 
-    check_left_castle(@row, board)
-    check_right_castle(@row, board)
+    check_left_castle(@row, board) if @can_castle
+    check_right_castle(@row, board) if @can_castle
 
     king_move.each do |move|
       if (@row+move[0]).between?(0,7) && (@column+move[1]).between?(0,7)
@@ -703,12 +726,62 @@ attr_accessor :can_castle
           @next_moves[:regular].push([@row+move[0], @column+move[1]])
         else
           if board[@row+move[0]][@column+move[1]].color == @opposite_color
+            next if taking_piece_but_checked?(@row,@column,move,board)
             @next_moves[:regular].push([@row+move[0], @column+move[1]])
           end
         end
       end
     end
 
+  end
+
+  #passes a move that will take enemy's piece
+  #move that takes enemy's piece(it also means it's within king's movement)
+  def taking_piece_but_checked? (row, column, move, board)
+    board.each_index do |r|
+      board[r].each do |tile|
+        if !tile.nil? && tile.color == @opposite_color &&
+           tile.position != [row+move[0], column+move[1]]
+          if tile.piece != 'king'
+            return true if check_bait(tile,row,column,move,board)
+          else
+            return true if check_bait_for_king(tile,row,column,move,board)
+          end
+        end
+      end
+    end
+    return false
+  end
+  #this one is the problem(0,1 comes before move_in_check)
+  def check_bait (tile, row, column, move, board)
+    return false if [row+move[0], column+move[1]] == tile.position
+
+    board[row+move[0]][column+move[1]].color = @color
+    tile.get_next(board)
+
+    if !tile.next_moves[:regular].empty?
+      tile.next_moves[:regular].each do |potential|
+        if potential == [row+move[0], column+move[1]]
+          board[row+move[0]][column+move[1]].color = @opposite_color
+          return true
+        end
+      end
+    end
+    board[row+move[0]][column+move[1]].color = @opposite_color
+    return false
+  end
+
+  def check_bait_for_king (tile, row, column, move, board)
+    king_move = [[1,1],[-1,1],[1,-1],[-1,-1],
+                [1,0],[0,1],[-1,0],[0,-1]]
+    k_row, k_column = tile.position[0], tile.position[1]
+
+    king_move.each do |k_move|
+      if (k_row+k_move[0]).between?(0,7) && (k_column+k_move[1]).between?(0,7)
+        return true if [k_row+k_move[0],k_column+k_move[1]] == [row+move[0], column+move[1]]
+      end
+    end
+    return false
   end
 
   def move_in_check? (row, column, move, board)
@@ -721,7 +794,7 @@ attr_accessor :can_castle
           next
         elsif tile.color == @opposite_color
           if tile.piece == 'pawn'
-            mark_x_for_pawn(tile, row, column, move, board, check_board)
+            mark_x_for_pawn(tile, column, move, board, check_board)
           elsif tile.piece == 'king'
             mark_x_for_king(tile, check_board, board)
           else
@@ -760,10 +833,11 @@ attr_accessor :can_castle
 
   end
 
-  def mark_x_for_pawn (tile, row, column, move, board, check_board)
+  def mark_x_for_pawn (tile, column, move, board, check_board)
+=begin
     clone = board
-    clone[row+move[0]][column+move[1]] = King.new(@color,[],'king')
-    #clone[row][column] = nil
+    clone[row+move[0]][column+move[1]] = King.new(@color,[row+move[0],column+move[1]],'king',false)
+    clone[row][column] = nil
     tile.get_next(clone)
 
     if !tile.next_moves[:regular].empty?
@@ -771,10 +845,18 @@ attr_accessor :can_castle
         check_board[potential[0]][potential[1]] = 'x'
       end
     end
+=end
+    tile.color == 'W' ? pawn_row = -1 : pawn_row = 1
+    pawn_moves = [[pawn_row,-1], [pawn_row,1]]
+    pawn_moves.each do |p_move|
+      if board[tile.position[0]+p_move[0]][tile.position[1]+p_move[1]].nil?
+        check_board[tile.position[0]+p_move[0]][tile.position[1]+p_move[1]] = 'x'
+      end
+    end
   end
 
   def check_left_castle (row,board)
-    if @can_castle && left_empty(board) && !move_in_check?(row,2,[0,0],board)
+    if left_empty(board) && !move_in_check?(row,2,[0,0],board)
       if !board[row][0].nil? && board[row][0].piece == 'rook' && board[row][0].can_castle
         @next_moves[:left_castle] = [row, 2]
       end
@@ -782,7 +864,7 @@ attr_accessor :can_castle
   end
 
   def check_right_castle (row,board)
-    if @can_castle && right_empty(board) && !move_in_check?(row,6,[0,0],board)
+    if right_empty(board) && !move_in_check?(row,6,[0,0],board)
       if !board[row][7].nil? && board[row][7].piece == 'rook' && board[row][7].can_castle
         @next_moves[:right_castle] = [row, 6]
       end
