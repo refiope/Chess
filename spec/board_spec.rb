@@ -14,7 +14,7 @@ describe 'Chess board' do
     end
 
     context '#initialize' do
-      it 'starts with the right pieces' do
+      it 'starts with the right symbols' do
         expect(@board.board[0][0].symbol).to eql("\u2656")
         expect(@board.board[3][5]).to eql(nil)
         expect(@board.board[1][6].symbol).to eql("\u2659")

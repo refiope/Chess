@@ -13,6 +13,8 @@ describe 'Chess game' do
 
       @empty_game = Game.new(@empty_board)
 
+      #---Different Setups For Each Piece---
+
       #not putting in parameters makes both jump_used, be_passant false
       if example.metadata[:pawn_test]
         @empty_game.board.board[0][2] = Pawn.new('B',[0,2],'pawn')
@@ -45,6 +47,13 @@ describe 'Chess game' do
         @empty_game.board.board[3][2] = Bishop.new('W',[3,2],'bishop')
         @empty_game.board.board[4][4] = Rook.new('B',[4,4],'rook')
         @empty_game.board.board[3][4] = Knight.new('B',[3,4],'knight')
+      end
+
+      if example.metadata[:queen_test]
+        @empty_game.board.board[3][3] = Queen.new('W',[3,3],'queen')
+        @empty_game.board.board[2][2] = Knight.new('W',[2,2],'knight')
+        @empty_game.board.board[3][4] = Queen.new('B',[3,4],'queen')
+        @empty_game.board.board[3][1] = Knight.new('B',[3,1],'knight')
       end
 
       unless example.metadata[:skip_before]
@@ -316,10 +325,13 @@ describe 'Chess game' do
         end
       end
 
-      context 'movements with queen' do
+      #White Queen Position: [3,3]
+      #Black Queen Position: [3,4]
+      #White Ally Position: [2,2]
+      #Black Ally Position: [3,1]
+      context 'movements with queen', queen_test: true do
 
         it 'makes the right move' do
-          @empty_game.board.board[3][3] = Queen.new('W',[3,3], 'queen')
           @empty_game.select([3,3])
           @empty_game.move([4,2])
 
@@ -327,45 +339,35 @@ describe 'Chess game' do
         end
         it 'does not make invalid move' do
           @empty_game.turn = 'B'
-          @empty_game.board.board[3][3] = Queen.new('B',[3,3],'queen')
-          @empty_game.select([3,3])
+          @empty_game.select([3,4])
 
-          expect(@empty_game.move([5,4])).to eql(nil)
+          expect(@empty_game.move([5,5])).to eql(nil)
         end
 
         it 'does not go past ally piece' do
-          @empty_game.board.board[3][3] = Queen.new('W',[3,3],'queen')
-          @empty_game.board.board[3][1] = Rook.new('W',[3,1],'rook')
           @empty_game.select([3,3])
 
-          expect(@empty_game.move([3,0])).to eql(nil)
+          expect(@empty_game.move([1,1])).to eql(nil)
         end
 
         it 'does not go past enemy piece' do
-          @empty_game.turn = 'B'
-          @empty_game.board.board[3][3] = Queen.new('B',[3,3], 'queen')
-          @empty_game.board.board[1][1] = Rook.new('W',[0,0], 'rook')
           @empty_game.select([3,3])
 
-          expect(@empty_game.move([0,0])).to eql(nil)
+          expect(@empty_game.move([3,5])).to eql(nil)
         end
 
         it 'does take enemy piece' do
           @empty_game.turn = 'B'
-          @empty_game.board.board[3][3] = Queen.new('B',[3,3], 'queen')
-          @empty_game.board.board[6][6] = Rook.new('W',[6,6], 'rook')
-          @empty_game.select([3,3])
-          @empty_game.move([6,6])
+          @empty_game.select([3,4])
+          @empty_game.move([3,3])
 
-          expect(@empty_game.board.board[6][6].color).to eql('B')
+          expect(@empty_game.board.board[3][3].color).to eql('B')
         end
 
         it 'does not take ally piece' do
-          @empty_game.board.board[3][3] = Queen.new('W',[3,3], 'queen')
-          @empty_game.board.board[5][1] = Bishop.new('W',[5,1], 'rook')
           @empty_game.select([3,3])
 
-          expect(@empty_game.move([5,1])).to eql(nil)
+          expect(@empty_game.move([2,2])).to eql(nil)
         end
       end
 
