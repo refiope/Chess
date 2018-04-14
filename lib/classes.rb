@@ -1,3 +1,4 @@
+require 'json'
 
 class GameBoard
   attr_accessor :board
@@ -101,6 +102,22 @@ class Game
     @checking_piece = nil
     @checked_king = nil
     @check_mate = false
+    @save = false
+  end
+
+  def to_json
+    { :board => @board,
+      :turn => @turn,
+      :in_check => @in_check,
+      :checking_piece => @checking_piece,
+      :checked_king => @checked_king
+    }.to_json
+  end
+
+  def self.from_json string
+    data = JSON.load string
+    self.new data['game_board'], data['turn'], data['in_check'],
+             data['checking_piece'], data['checked_king']
   end
 
   def play
@@ -111,11 +128,14 @@ class Game
         display_turn
         puts "#{@turn} in check"
         check_mode
+        change_turn
+        break if @save
       else
         break if stale_mate?
         display_turn
         puts "Select piece: "
         select(get_input)
+        break if @save
         puts "You selected #{@selected.piece}. Choose where to move your piece: "
         get_move
         change_turn
@@ -135,15 +155,23 @@ class Game
   def check_mode
     puts "Select piece: "
     select(get_input)
+    return if @save
     puts "You selected #{@selected.piece}. Choose where to move your piece: "
     check_mode if check_mode_move(get_input).nil?
-    change_turn
   end
 
+  #gets called by select, move, check_mode_move
   def get_input
     order = ['a','b','c','d','e','f','g','h']
     input = gets.chomp
-    if input[0].between?('a','h') && input[1].between?('1','8')
+    get_input if input.nil?
+
+    if input == 'save'
+      @save = true
+      File.open("./save/save.txt", "w") do |file|
+        file.puts to_json
+      end
+    elsif input[0].between?('a','h') && input[1].between?('1','8')
       row = (input[1].to_i - 8).abs
       column = order.find_index(input[0])
       return [row, column]
@@ -154,6 +182,8 @@ class Game
   end
 
   def select input
+    return if @save
+
     if @board.board[input[0]][input[1]].nil?
       puts "Choose the right piece"
       select(get_input)
@@ -174,6 +204,8 @@ class Game
   end
 
   def move input
+    return if @save
+
     @selected.get_next(@board.board)
     row, column = @selected.position[0], @selected.position[1]
     reset_passant
@@ -195,6 +227,8 @@ class Game
   end
 
   def check_mode_move input
+    return if @save
+
     clone = @board.board
     @selected.get_next(clone)
     row, column = @selected.position[0], @selected.position[1]
