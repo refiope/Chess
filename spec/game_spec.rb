@@ -13,15 +13,30 @@ describe 'Chess game' do
 
       @empty_game = Game.new(@empty_board)
 
+      #not putting in parameters makes both jump_used, be_passant false
+      if example.metadata[:pawn_test]
+        @empty_game.board.board[0][2] = Pawn.new('B',[0,2],'pawn')
+        @empty_game.board.board[1][0] = Pawn.new('W',[1,0],'pawn',true)
+        @empty_game.board.board[3][3] = Pawn.new('B',[3,3],'pawn',true)
+        @empty_game.board.board[4][2] = Pawn.new('W',[4,2],'pawn',true)
+        @empty_game.board.board[7][2] = Pawn.new('W',[7,2],'pawn',true)
+        @empty_game.board.board[7][3] = Pawn.new('W',[7,3],'pawn')
+        @empty_game.board.board[5][0] = Pawn.new('B',[5,0],'pawn',true,true)
+        @empty_game.board.board[5][1] = Pawn.new('W',[5,1],'pawn',true,false)
+      end
+
+      if example.metadata[:knight_test]
+        @empty_game.board.board[2][2] = Knight.new('W',[2,2],'knight')
+        @empty_game.board.board[3][4] = Knight.new('W',[3,4],'knight')
+        @empty_game.board.board[5][2] = Knight.new('B',[5,2],'knight')
+        @empty_game.board.board[0][1] = Bishop.new('B',[0,1],'bishop')
+      end
+
       unless example.metadata[:skip_before]
         @empty_game.board.board[4][7] = King.new('W',[4,7],'king')
         @empty_game.board.board[2][7] = King.new('B',[2,7],'king')
       end
     end
-
-    #after(:each) do
-    #  @empty_game.board.display
-    #end
 
     context '#select' do
 
@@ -49,119 +64,146 @@ describe 'Chess game' do
     end
 
     context '#move' do
+      #Should be able to en_passant: [5,1] -> [4,0]
+      #Should be able to change piece: [1,0] -> [0,0]
+      #Should be able to take enemy piece: [3,3] -> [4,2]
+      #Should not be able to jump twice: [7,2] -> [5,2] -> nil
 
-      context 'movements with pawn' do
+      context 'movements with pawn', pawn_test: true do
 
+        #White Pawn Position: [7,3]
         it 'moves white pawn one tile up' do
-          @game.select([6,4])
-          @game.move([5,4])
+          @empty_game.select([7,3])
+          @empty_game.move([6,3])
 
-          expect(@game.board.board[5][4].piece).to eql('pawn')
-          expect(@game.board.board[5][4].position).to eql([5,4])
-          expect(@game.board.board[6][4]).to eql(nil)
+          expect(@empty_game.board.board[6][3].piece).to eql('pawn')
+          expect(@empty_game.board.board[6][3].position).to eql([6,3])
+          expect(@empty_game.board.board[7][3]).to eql(nil)
         end
 
+        #Black Pawn Position: [0,2]
         it 'moves black pawn one tile down' do
-          @game.turn = 'B'
-          @game.select([1,3])
-          @game.move([2,3])
+          @empty_game.turn = 'B'
+          @empty_game.select([0,2])
+          @empty_game.move([1,2])
 
-          expect(@game.board.board[2][3].piece).to eql('pawn')
-          expect(@game.board.board[2][3].position).to eql([2,3])
-          expect(@game.board.board[1][3]).to eql(nil)
+          expect(@empty_game.board.board[1][2].piece).to eql('pawn')
+          expect(@empty_game.board.board[1][2].position).to eql([1,2])
+          expect(@empty_game.board.board[0][2]).to eql(nil)
         end
 
+        #White Pawn Position: [7,3], jump_used == false (should be able to jump)
         it 'allows jump for white pawn' do
-          @game.select([6,4])
-          @game.move([4,4])
+          @empty_game.select([7,3])
+          @empty_game.move([5,3])
 
-          expect(@game.board.board[4][4].piece).to eql('pawn')
-          expect(@game.board.board[4][4].position).to eql([4,4])
-          expect(@game.board.board[6][4]).to eql(nil)
-          expect(@game.board.board[4][4].jump_used).to be true
+          expect(@empty_game.board.board[5][3].piece).to eql('pawn')
+          expect(@empty_game.board.board[5][3].position).to eql([5,3])
+          expect(@empty_game.board.board[7][3]).to eql(nil)
+          expect(@empty_game.board.board[5][3].jump_used).to be true
         end
 
+        #Black Pawn Position: [0,2], jump_used == false (should be able to jump)
         it 'allows jump for black pawn' do
-          @game.turn = 'B'
-          @game.select([1,4])
-          @game.move([3,4])
+          @empty_game.turn = 'B'
+          @empty_game.select([0,2])
+          @empty_game.move([2,2])
 
-          expect(@game.board.board[3][4].piece).to eql('pawn')
-          expect(@game.board.board[3][4].position).to eql([3,4])
-          expect(@game.board.board[1][4]).to eql(nil)
-          expect(@game.board.board[3][4].jump_used).to be true
+          expect(@empty_game.board.board[2][2].piece).to eql('pawn')
+          expect(@empty_game.board.board[2][2].position).to eql([2,2])
+          expect(@empty_game.board.board[0][2]).to eql(nil)
+          expect(@empty_game.board.board[2][2].jump_used).to be true
         end
 
+        #White Pawn Position: [7,2], jump_used == true (should not be able to jump)
         it 'does not allow jump twice' do
-          @empty_game.board.board[6][4] = Pawn.new('W',[6,4],'pawn',true,false)
-          @empty_game.select([6,4])
-          expect(@empty_game.move([4,4])).to eql(nil)
+          @empty_game.select([7,2])
+          expect(@empty_game.move([5,2])).to eql(nil)
         end
 
+        #White Pawn Position: [5,1]
+        #Black Pawn Position: [5,0], be_passant == true (can be en_passanted)
         it 'white pawn can en_passant' do
-          @empty_game.board.board[4][4] = Pawn.new('W',[4,4],'pawn',false,false)
-          @empty_game.board.board[4][3] = Pawn.new('B',[4,3],'pawn',true,true)
-          @empty_game.select([4,4])
-          @empty_game.move([3,3])
+          @empty_game.select([5,1])
+          @empty_game.move([4,0])
 
-          expect(@empty_game.board.board[4][3]).to eql(nil)
-          expect(@empty_game.board.board[3][3].piece).to eql('pawn')
+          expect(@empty_game.board.board[5][0]).to eql(nil)
+          expect(@empty_game.board.board[4][0].piece).to eql('pawn')
+          expect(@empty_game.board.board[5][1]).to eql(nil)
         end
 
+        #White Pawn Position: [1,0]
         it 'changes white pawn at the end of the board' do
           allow(@empty_game).to receive(:gets).and_return('queen')
 
-          @empty_game.board.board[1][4] = Pawn.new('W', [1,4], 'pawn', false, false)
-          @empty_game.select([1,4])
-          @empty_game.move([0,4])
+          @empty_game.select([1,0])
+          @empty_game.move([0,0])
 
-          expect(@empty_game.board.board[0][4].piece).to eql('queen')
-          expect(@empty_game.board.board[0][4].color).to eql('W')
-          expect(@empty_game.board.board[0][4].position).to eql([0,4])
+          expect(@empty_game.board.board[0][0].piece).to eql('queen')
+          expect(@empty_game.board.board[0][0].color).to eql('W')
+          expect(@empty_game.board.board[0][0].position).to eql([0,0])
         end
 
         it 'does not allow invalid moves for pawn' do
-          @game.select([6,4])
+          @empty_game.select([7,3])
 
-          expect(@game.move([3,6])).to eql(nil)
+          expect(@empty_game.move([7,4])).to eql(nil)
         end
 
+        #White Pawn Position: [4,2]
+        #Black Pawn Position: [3,3]
+        it 'takes enemy piece' do
+          @empty_game.turn = 'B'
+          @empty_game.select([3,3])
+          @empty_game.move([4,2])
+
+          expect(@empty_game.board.board[4][2].color).to eql('B')
+          expect(@empty_game.board.board[3][3]).to eql(nil)
+        end
       end
 
-      context 'movements with knight' do
+      #White Knight Positions: [2,2], [3,4]
+      #Black Knight Position: [5,2]
+      #Black Bishop Position: [0,1]
+      context 'movements with knight', knight_test: true do
 
         it 'moves white to right positions' do
-          @empty_game.board.board[3][3] = Knight.new('W',[3,3],'knight')
-          @empty_game.select([3,3])
-          @empty_game.move([4,5])
+          @empty_game.select([2,2])
+          @empty_game.move([1,4])
 
-          expect(@empty_game.board.board[4][5].piece).to eql('knight')
-          expect(@empty_game.board.board[4][5].color).to eql('W')
-          expect(@empty_game.board.board[4][5].position).to eql([4,5])
-          expect(@empty_game.board.board[3][3]).to eql(nil)
+          expect(@empty_game.board.board[1][4].piece).to eql('knight')
+          expect(@empty_game.board.board[1][4].color).to eql('W')
+          expect(@empty_game.board.board[1][4].position).to eql([1,4])
+          expect(@empty_game.board.board[2][2]).to eql(nil)
         end
 
         it 'moves black to right positions' do
           @empty_game.turn = 'B'
-          @empty_game.board.board[3][3] = Knight.new('B',[3,3],'knight')
-          @empty_game.select([3,3])
-          @empty_game.move([4,5])
+          @empty_game.select([5,2])
+          @empty_game.move([3,3])
 
-          expect(@empty_game.board.board[4][5].piece).to eql('knight')
-          expect(@empty_game.board.board[4][5].color).to eql('B')
+          expect(@empty_game.board.board[3][3].piece).to eql('knight')
+          expect(@empty_game.board.board[3][3].color).to eql('B')
         end
 
         it "does not move to ally's piece" do
-          @game.select([7,1])
+          @empty_game.select([3,4])
 
-          expect(@game.move([6,3])).to eql(nil)
+          expect(@empty_game.move([2,2])).to eql(nil)
         end
 
         it 'does not make invalid moves' do
-          @empty_game.board.board[3][3] = Knight.new('W',[3,3],'knight')
-          @empty_game.select([3,3])
+          @empty_game.select([3,4])
 
-          expect(@empty_game.move([5,5])).to eql(nil)
+          expect(@empty_game.move([5,6])).to eql(nil)
+        end
+
+        it 'takes enemy piece' do
+          @empty_game.select([2,2])
+          @empty_game.move([0,1])
+
+          expect(@empty_game.board.board[0][1].piece).to eql('knight')
+          expect(@empty_game.board.board[0][1].color).to eql('W')
         end
       end
 

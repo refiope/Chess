@@ -332,7 +332,6 @@ class Game
 
   def check_special_move (input)
     if @selected.next_moves.key(input).nil?
-      puts "You can't move there"
       return nil
     else
       return special_move(@selected.next_moves.key(input), input)
