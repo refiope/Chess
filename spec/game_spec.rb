@@ -658,8 +658,6 @@ describe 'Chess game' do
         @empty_game.board.board[5][3] = Queen.new('B',[5,3],'queen')
         @empty_game.board.board[5][7] = Pawn.new('W',[5,7],'pawn',true,false)
         @empty_game.board.board[5][7].get_next(@empty_game.board.board)
-        puts @empty_game.board.board[5][7].next_moves.inspect
-        @empty_game.board.display
         expect(@empty_game.stale_mate?).to be false
       end
 

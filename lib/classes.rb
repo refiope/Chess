@@ -209,7 +209,6 @@ class Game
       return nil if check_king(clone)
 
       move_piece(valid_move, @board.board, row, column)
-      @board.display
       if move_checks_king?(valid_move)
         @check_mate = true if check_mate?
       end
