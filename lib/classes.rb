@@ -1,5 +1,4 @@
 
-#Access board
 class GameBoard
   attr_accessor :board
 
@@ -88,10 +87,8 @@ class GameBoard
 
 end
 
-#be_passant set false on the start of turn
-#king/rook's can_castle set false when moved
 class Game
-  #accessing variables for test purposes
+
   attr_accessor :turn, :board, :checking_piece, :checked_king
   attr_reader :selected
 
@@ -108,7 +105,7 @@ class Game
   def play
     while(!@check_mate) do
       @board.display
-      #if check_king(board) is true, be in check_mode
+
       if @in_check
         display_turn
         puts "#{@turn} in check"
@@ -117,7 +114,7 @@ class Game
         break if stale_mate?
         display_turn
         puts "Select piece: "
-        select(get_input) #sets @selected
+        select(get_input)
         puts "You selected #{@selected.piece}. Choose where to move your piece: "
         get_move
         change_turn
@@ -134,17 +131,14 @@ class Game
     @turn == 'W' ? @turn = 'B' : @turn = 'W'
   end
 
-  #You can't be checkmated on your turn. So not going to check checkmate
-  #get appropriate input until king is not checked
   def check_mode
     puts "Select piece: "
-    select(get_input) #sets @selected
+    select(get_input)
     puts "You selected #{@selected.piece}. Choose where to move your piece: "
     check_mode if check_mode_move(get_input).nil?
     change_turn
   end
 
-  #a...h, 1...8
   def get_input
     order = ['a','b','c','d','e','f','g','h']
     input = gets.chomp
@@ -158,7 +152,6 @@ class Game
     end
   end
 
-  #input = [n,n]
   def select input
     if @board.board[input[0]][input[1]].nil?
       puts "Choose the right piece"
@@ -183,7 +176,6 @@ class Game
     @selected.get_next(@board.board)
     row, column = @selected.position[0], @selected.position[1]
     reset_passant
-    #this is where it finds its move and sets some conditions for special move
     valid_move = check_regular_move(input)
     valid_move = check_special_move(input) if valid_move.nil?
 
@@ -192,7 +184,6 @@ class Game
       return nil
     elsif !king_in_check_after?(valid_move, @board.board)
       move_piece(valid_move, @board.board, row, column)
-      #this one is the problem
       if move_checks_king?(valid_move)
         @check_mate = true if check_mate?
       end
@@ -202,8 +193,6 @@ class Game
     end
   end
 
-  #using clone makes things weird. this needs fix. probably because i'm chaning the value
-  #of an object inside the clone, where i shouldn't
   def check_mode_move input
     clone = @board.board
     @selected.get_next(clone)
@@ -237,7 +226,6 @@ class Game
     moved_piece.next_moves[:regular].each do |move|
       tile = @board.board[move[0]][move[1]]
       if !tile.nil? && tile.color == moved_piece.opposite_color && tile.piece == 'king'
-        #the other side is in check
         @checking_piece = moved_piece
         @in_check = true
         @checked_king = tile
@@ -251,16 +239,11 @@ class Game
     return false
   end
 
-  #if king is in check -> king has no moves available? ->
-  #get position of a piece that makes the king in check(there's only one)
-  #get next_moves of each
   def check_mate?
     @checked_king.get_next(@board.board)
     return false if !@checked_king.next_moves[:regular].empty?
-    #need to get rid of or get in the way of
     special_case = ['rook','bishop','queen']
     special_case = true if special_case.include?(@checking_piece.piece)
-    #get next_moves of checking_piece, check board if movements of each include
     @checking_piece.get_next(@board.board)
     c_row, c_column = @checking_piece.position[0], @checking_piece.position[1]
 
@@ -286,10 +269,9 @@ class Game
       @board.board[row].each do |tile|
         if !tile.nil? && tile.color == @turn
           tile.get_next(@board.board)
-          if tile.next_moves[:regular].empty? && tile.next_moves[1..-1].empty?
+          if tile.next_moves[:regular].empty? && tile.next_moves.keys[1..-1].empty?
             next
           else
-            @board.display
             return false
           end
         end
@@ -300,7 +282,6 @@ class Game
   end
 
   def check_in_the_way tile
-    #from king to checking_piece
     direction_row = @checking_piece.position[0] - @checked_king.position[0]
     direction_row = direction_row/direction_row.abs if direction_row != 0
     direction_column = @checking_piece.position[1] - @checked_king.position[1]
@@ -413,7 +394,6 @@ class Game
       end
   end
 
-  #check opposite's rook, bishop, queen
   def king_in_check_after? (input, board)
     return false if @selected.piece == 'king'
 
@@ -458,7 +438,6 @@ class Game
 
     board.each_index do |row|
       board[row].each do |tile|
-        #king can't check each other
         if !tile.nil? && tile.color == opponent && tile.piece != 'king'
           tile.get_next(board)
 
@@ -474,7 +453,6 @@ class Game
 
 end
 
-#Access color, position, symbol, next_moves
 class ChessPiece
   attr_accessor :color, :position, :next_moves, :row, :column
   attr_reader :symbol, :piece, :opposite_color
@@ -512,9 +490,6 @@ class ChessPiece
   end
 end
 
-#En Passant, end of the board change
-#moving only one tile is considered special move for pawn
-#because it cannot take opponent's piece this way
 class Pawn < ChessPiece
   attr_accessor :jump_used, :be_passant
 
@@ -700,9 +675,8 @@ class Queen < ChessPiece
   end
 end
 
-#King <=> Rook switch
-#this class needs fix endless loop
 class King < ChessPiece
+
 attr_accessor :can_castle
 
   def initialize(color, position, piece, can_castle=true)
@@ -735,8 +709,6 @@ attr_accessor :can_castle
 
   end
 
-  #passes a move that will take enemy's piece
-  #move that takes enemy's piece(it also means it's within king's movement)
   def taking_piece_but_checked? (row, column, move, board)
     board.each_index do |r|
       board[r].each do |tile|
@@ -752,7 +724,7 @@ attr_accessor :can_castle
     end
     return false
   end
-  #this one is the problem(0,1 comes before move_in_check)
+
   def check_bait (tile, row, column, move, board)
     return false if [row+move[0], column+move[1]] == tile.position
 
@@ -807,7 +779,6 @@ attr_accessor :can_castle
     check_board[row+move[0]][column+move[1]] == 'x' ? true : false
   end
 
-  #seperate mark method for king since it goes on infinite loop?
   def mark_x_without (tile, check_board, board)
     tile.get_next(board)
 
@@ -834,18 +805,7 @@ attr_accessor :can_castle
   end
 
   def mark_x_for_pawn (tile, column, move, board, check_board)
-=begin
-    clone = board
-    clone[row+move[0]][column+move[1]] = King.new(@color,[row+move[0],column+move[1]],'king',false)
-    clone[row][column] = nil
-    tile.get_next(clone)
 
-    if !tile.next_moves[:regular].empty?
-      tile.next_moves[:regular].each do |potential|
-        check_board[potential[0]][potential[1]] = 'x'
-      end
-    end
-=end
     tile.color == 'W' ? pawn_row = -1 : pawn_row = 1
     pawn_moves = [[pawn_row,-1], [pawn_row,1]]
     pawn_moves.each do |p_move|
