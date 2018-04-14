@@ -371,6 +371,7 @@ describe 'Chess game' do
         end
       end
 
+      #Going to leave King alone because it needs specific conditions for each tests
       context 'movements with king', skip_before: true do
 
         it 'makes regular movements' do
