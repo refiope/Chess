@@ -92,7 +92,8 @@ class Game
   attr_accessor :turn, :board, :checking_piece, :checked_king
   attr_reader :selected
 
-  def initialize (board=GameBoard.new, turn='W')
+  def initialize (board=GameBoard.new, turn='W', in_check=false,
+                  checking_piece=nil, checked_king=nil)
     @board = board
     @turn = turn
     @selected = nil
