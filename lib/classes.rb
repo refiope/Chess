@@ -517,6 +517,20 @@ class ChessPiece
     @column = @position[1]
   end
 
+  #for bishop, knight, queen
+  def to_json
+    {
+      :color => @color,
+      :position => @position,
+      :piece => @piece
+    }.to_json
+  end
+  #for bishop, knight, queen
+  def self.from_json string
+    data = JSON.load string
+    self.new data['color'], data['position'], data['piece']
+  end
+
   def mark piece
     pieces = ['king','queen','rook','bishop','knight','pawn']
     uni_codes = [
@@ -546,6 +560,22 @@ class Pawn < ChessPiece
     super(color, position, piece)
     @jump_used = jump_used
     @be_passant = be_passant
+  end
+
+  def to_json
+    {
+      :color => @color,
+      :position => @position,
+      :piece => @piece,
+      :jump_used => @jump_used,
+      :be_passant => @be_passant
+    }.to_json
+  end
+
+  def self.from_json
+    data = JSON.load string
+    self.new data['color'], data['position'], data['piece'],
+             data['jump_used'], data['be_passant']
   end
 
   def get_next board
@@ -657,6 +687,20 @@ class Rook < ChessPiece
     @can_castle = can_castle
   end
 
+  def to_json
+    {
+      :color => @color,
+      :position => @position,
+      :piece => @piece,
+      :can_castle => @can_castle
+    }.to_json
+  end
+
+  def self.from_json
+    data = JSON.load string
+    self.new data['color'], data['position'], data['piece'], data['can_castle']
+  end
+
   def get_next board
     super(color)
 
@@ -731,6 +775,20 @@ attr_accessor :can_castle
   def initialize(color, position, piece, can_castle=true)
     super(color, position, piece)
     @can_castle = can_castle
+  end
+
+  def to_json
+    {
+      :color => @color,
+      :position => @position,
+      :piece => @piece,
+      :can_castle => @can_castle
+    }.to_json
+  end
+
+  def self.from_json
+    data = JSON.load string
+    self.new data['color'], data['position'], data['piece'], data['can_castle']
   end
 
   def get_next board
