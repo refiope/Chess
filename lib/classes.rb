@@ -106,17 +106,32 @@ class Game
   end
 
   def to_json
-    { :board => @board,
-      :turn => @turn,
+    { :turn => @turn,
       :in_check => @in_check,
       :checking_piece => @checking_piece,
       :checked_king => @checked_king
     }.to_json
   end
 
-  def self.from_json string
+  def json_board
+    board = ""
+    @board.board.each_index do |row|
+      @board.board[row].each do |tile|
+        File.open("./save/board_save.txt",'w') do |file|
+          if tile.nil?
+            file.puts 'null'
+          else
+            file.puts tile.to_json
+          end
+        end
+      end
+    end
+
+  end
+  #board is object GameBoard
+  def self.from_json (board, string)
     data = JSON.load string
-    self.new data['game_board'], data['turn'], data['in_check'],
+    self.new board, data['turn'], data['in_check'],
              data['checking_piece'], data['checked_king']
   end
 
@@ -171,6 +186,7 @@ class Game
       File.open("./save/save.txt", "w") do |file|
         file.puts to_json
       end
+
     elsif input[0].between?('a','h') && input[1].between?('1','8')
       row = (input[1].to_i - 8).abs
       column = order.find_index(input[0])
