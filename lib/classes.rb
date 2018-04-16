@@ -145,6 +145,8 @@ class Game
   #Main loop for playing the game: display board -> get input -> change turn
   #Breaks out of loop if check mate, stale mate, or save requested
   def play
+    welcome_message
+
     while(!@check_mate) do
       @board.display
       if @in_check
@@ -169,6 +171,12 @@ class Game
 
   #For testing purpose, below is commented out
   #private
+
+  def welcome_message
+    puts "Welcome to Chess! Choose a piece using inputs like 'a6', 'h1'"
+    puts "Enter 'save' any time to save your progress"
+    puts "Either checkmate or stalemate ends the game"
+  end
 
   def end_message
     if @check_mate
