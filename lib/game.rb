@@ -15,7 +15,7 @@ def ask_load
   end
 end
 
-if !File.zero?("./save/save.txt")
+if File.exist?("./save/save.txt")
   ask_load
 else
   game = Game.new
