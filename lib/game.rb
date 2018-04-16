@@ -5,7 +5,9 @@ def ask_load
   input = gets.chomp
 
   if input[0].downcase == 'y'
-    game = Game.new.from_json(File.read("./save/save.txt"))
+    game = Game.game_from_json('./save/board_save.txt',
+                               './save/check_save.txt',
+                               File.read("./save/save.txt"))
     game.play
   else
     game = Game.new

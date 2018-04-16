@@ -98,53 +98,121 @@ class Game
     @board = board
     @turn = turn
     @selected = nil
-    @in_check = false
-    @checking_piece = nil
-    @checked_king = nil
+    @in_check = in_check
+    @checking_piece = checking_piece
+    @checked_king = checked_king
     @check_mate = false
     @save = false
   end
 
-  def to_json
+  def game_to_json
     { :turn => @turn,
-      :in_check => @in_check,
-      :checking_piece => @checking_piece,
-      :checked_king => @checked_king
+      :in_check => @in_check
     }.to_json
   end
 
-  def json_board
-    board = ""
-    @board.board.each_index do |row|
-      @board.board[row].each do |tile|
-        File.open("./save/board_save.txt",'w') do |file|
+  def to_json_check
+      File.open("./save/check_save.txt",'w') do |file|
+        if @in_check == false
+          file.puts 'null'
+          break
+        end
+        file.puts @checking_piece.piece_to_json
+        file.puts @checked_king.piece_to_json
+      end
+  end
+
+  def to_json_board
+    File.open("./save/board_save.txt",'w') do |file|
+      @board.board.each_index do |row|
+        @board.board[row].each do |tile|
           if tile.nil?
             file.puts 'null'
           else
-            file.puts tile.to_json
+            file.puts tile.piece_to_json
           end
         end
       end
     end
+  end
 
+  #checking_piece, checked_king
+  def self.from_json_check address
+    check_related = []
+    File.readlines(address).each do |line|
+      if line == 'null'
+        return [nil,nil]
+      end
+      check_related.push(create_piece_from_json(line))
+    end
+    return check_related
+  end
+
+  def self.from_json_board address
+    line_of_tiles = []
+
+    File.readlines(address).each do |line|
+      if line == 'null'
+        line_of_tiles.push(nil)
+      else
+        line_of_tiles.push(create_piece_from_json(line))
+      end
+    end
+
+    empty_board = []
+    8.times { empty_board.push(Array.new(8,nil)) }
+
+    loaded_board = load_board(empty_board, line_of_tiles)
+
+    gameboard = GameBoard.new
+    gameboard.board = loaded_board
+    return gameboard
+  end
+
+  def self.create_piece_from_json line
+    if line.include?('pawn')
+      return Pawn.from_json(line)
+    elsif line.include?('knight')
+      return Knight.from_json(line)
+    elsif line.include?('rook')
+      return Rook.from_json(line)
+    elsif line.include?('bishop')
+      return Bishop.from_json(line)
+    elsif line.include?('queen')
+      return Queen.from_json(line)
+    elsif line.include?('king')
+      return King.from_json(line)
+    end
+  end
+
+  def self.load_board empty_board, tiles
+    counter = 0
+    for row in 0..7
+      for column in 0..7
+        empty_board[row][column] = tiles[counter]
+        counter += 1
+      end
+    end
+    return empty_board
   end
   #board is object GameBoard
-  def self.from_json (board, string)
+  def self.game_from_json (board_address, check_address, string)
+    board = from_json_board(board_address)
+    check_related = from_json_check(check_address)
     data = JSON.load string
     self.new board, data['turn'], data['in_check'],
-             data['checking_piece'], data['checked_king']
+             check_related[0], check_related[1]
   end
 
   def play
     while(!@check_mate) do
       @board.display
-
       if @in_check
         display_turn
         puts "#{@turn} in check"
         check_mode
-        change_turn
         break if @save
+        change_turn
       else
         break if stale_mate?
         display_turn
@@ -155,6 +223,17 @@ class Game
         get_move
         change_turn
       end
+    end
+    end_message
+  end
+
+  def end_message
+    if @check_mate
+      @board.display
+      puts "Checkmate!"
+    elsif !@save
+      @board.display
+      puts "Stalemate!"
     end
   end
 
@@ -184,9 +263,10 @@ class Game
     if input == 'save'
       @save = true
       File.open("./save/save.txt", "w") do |file|
-        file.puts to_json
+        file.puts game_to_json
       end
-
+      to_json_board
+      to_json_check
     elsif input[0].between?('a','h') && input[1].between?('1','8')
       row = (input[1].to_i - 8).abs
       column = order.find_index(input[0])
@@ -518,7 +598,7 @@ class ChessPiece
   end
 
   #for bishop, knight, queen
-  def to_json
+  def piece_to_json
     {
       :color => @color,
       :position => @position,
@@ -562,7 +642,7 @@ class Pawn < ChessPiece
     @be_passant = be_passant
   end
 
-  def to_json
+  def piece_to_json
     {
       :color => @color,
       :position => @position,
@@ -572,7 +652,7 @@ class Pawn < ChessPiece
     }.to_json
   end
 
-  def self.from_json
+  def self.from_json string
     data = JSON.load string
     self.new data['color'], data['position'], data['piece'],
              data['jump_used'], data['be_passant']
@@ -687,7 +767,7 @@ class Rook < ChessPiece
     @can_castle = can_castle
   end
 
-  def to_json
+  def piece_to_json
     {
       :color => @color,
       :position => @position,
@@ -696,7 +776,7 @@ class Rook < ChessPiece
     }.to_json
   end
 
-  def self.from_json
+  def self.from_json string
     data = JSON.load string
     self.new data['color'], data['position'], data['piece'], data['can_castle']
   end
@@ -777,7 +857,7 @@ attr_accessor :can_castle
     @can_castle = can_castle
   end
 
-  def to_json
+  def piece_to_json
     {
       :color => @color,
       :position => @position,
@@ -786,7 +866,7 @@ attr_accessor :can_castle
     }.to_json
   end
 
-  def self.from_json
+  def self.from_json string
     data = JSON.load string
     self.new data['color'], data['position'], data['piece'], data['can_castle']
   end
