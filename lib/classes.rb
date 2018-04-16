@@ -204,9 +204,10 @@ class Game
   def get_input
     order = ['a','b','c','d','e','f','g','h']
     input = gets.chomp
-    get_input if input.nil?
 
-    if input == 'save'
+    if input == ''
+      get_input
+    elsif input == 'save'
       @save = true
       File.open("./save/save.txt", "w") do |file|
         file.puts game_to_json
